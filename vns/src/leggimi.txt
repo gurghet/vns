@@ -1,0 +1,3 @@
+Qui scriviamo le informazioni che dobbiano tenere a mente durante lo sviluppo
+
+le classi mettiamole tutte sotto il package vnsBFP
