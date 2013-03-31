@@ -1,5 +1,9 @@
 package vnsBFP;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+
 public class Main {
 
 	/**
@@ -17,7 +21,8 @@ public class Main {
 	
 	private Machine getDummyMachine() {
 		Machine dummyMachine = new Machine();
-		
+		List<String> lines;
+		Path path = Paths.get("somepath");
 		return dummyMachine;
 	}
 
