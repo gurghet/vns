@@ -14,5 +14,10 @@ public class Main {
 
 		// stampa risultato su un file
 	}
+	
+	private Machine getDummyMachine() {
+		Machine dummyMachine = new Machine();
+		return dummyMachine;
+	}
 
 }

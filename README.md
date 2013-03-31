@@ -5,7 +5,7 @@ Implementazione di “Variable neighborhood search approaches for scheduling job
 
 Find an initial solution s ;
 while maximum runtime not reached do
-k ←1; Whilek≤kmax do
+	k ←1; Whilek≤kmax do
 End End
 Shaking:selectarandomsolution x∈Nk(s);
 Apply some local search with x as initial solution, local optimum x′
