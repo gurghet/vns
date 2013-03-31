@@ -7,8 +7,8 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		// leggi il file istanza e crea gli oggetti Jobs
-		
-		// crea una soluzione iniziale vuota
+		// inserendoli man mano nella macchina dummy
+		// nell'ordine in cui vengono letti
 		
 		// fai girare l'algoritmo
 
