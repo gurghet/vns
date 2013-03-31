@@ -17,6 +17,7 @@ public class Main {
 	
 	private Machine getDummyMachine() {
 		Machine dummyMachine = new Machine();
+		
 		return dummyMachine;
 	}
 
