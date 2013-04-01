@@ -1,6 +1,7 @@
 package vnsBFP;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,8 +36,23 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	    lines.add("This is a line added in code.");
-	    System.out.println(String.valueOf(lines));
+	    
+	    // processing delle linee creazione e aggiunta dei job
+	    // la prima linea contiene il numero dei job
+	    int nJobs = Integer.parseInt(lines.remove(0).trim());
+	    // processo i job
+	    String[] jobLine;
+	    for (int i = 0; i < nJobs; i++) {
+			jobLine = lines.remove(0).trim().split("\\s+");
+			Job newJob = new Job();
+			newJob.id = i;
+			newJob.procTime = Integer.parseInt(jobLine[0]);
+			newJob.dueDate = Integer.parseInt(jobLine[1]);
+			newJob.weight = Integer.parseInt(jobLine[2]);
+			dummyMachine.jobs[i] = newJob;
+			System.out.println(dummyMachine.jobs[i]);
+		}
+	    
 		return dummyMachine;
 	}
 
