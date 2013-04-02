@@ -8,10 +8,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+/**
+ * @author Andrea Passaglia
+ * @author Paolo Fontanelli
+ * @version 0.1
+ */
 public class Main {
 
 	/**
-	 * @param nome file istanza, numero macchine, numero mosse
+	 * Questa variabile va modificata manualmente, se impostata a true
+	 * il programma stampa il log effettuato con la funzione static
+	 * log(oggetto) o Main.log(oggetto).
+	 */
+	private static final boolean VERBOSE = true;
+
+	/**
+	 * @param args	String[] contenente: nome file istanza, numero macchine, numero mosse
 	 */
 	public static void main(String[] args) {
 		Machine dummyMachine = getDummyMachine();
@@ -24,6 +36,19 @@ public class Main {
 		// stampa risultato su un file
 	}
 	
+	/**
+	 * @param element	Object elemento da stampare se la variabile VERBOSE è true
+	 */
+	public static void log(Object element) {
+		if (VERBOSE) {
+			System.out.println(element);
+		}
+	}
+	
+	/**
+	 * @return	un oggetto Machine che contiene tutti i job letti nell'istanza
+	 * 			senza alcun tipo di schedulazione particolare
+	 */
 	private static Machine getDummyMachine() {
 		Machine dummyMachine = new Machine();
 		List<String> lines = null;
@@ -49,8 +74,8 @@ public class Main {
 			newJob.procTime = Integer.parseInt(jobLine[0]);
 			newJob.dueDate = Integer.parseInt(jobLine[1]);
 			newJob.weight = Integer.parseInt(jobLine[2]);
-			dummyMachine.jobs[i] = newJob;
-			System.out.println(dummyMachine.jobs[i]);
+			dummyMachine.jobs.add(newJob);
+			log(dummyMachine.jobs.get(i));
 		}
 	    
 		return dummyMachine;

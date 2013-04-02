@@ -1,5 +1,6 @@
 package vnsBFP;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Machine {
@@ -9,6 +10,6 @@ public class Machine {
 	}
 	
 	public Machine() {
-		jobs = new List<Job>();
+		jobs = new ArrayList<Job>();
 	}
 }
