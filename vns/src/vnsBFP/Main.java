@@ -21,17 +21,30 @@ public class Main {
 	 * log(oggetto) o Main.log(oggetto).
 	 */
 	private static final boolean VERBOSE = true;
-
+	
 	/**
 	 * @param args	String[] contenente: nome file istanza, numero macchine, numero mosse
 	 */
 	public static void main(String[] args) {
-		Machine dummyMachine = getDummyMachine();
+		// questi puoi settarli nell’IDE così:
+		// 
+		String filePath = args[0];
+		int numMacchine = Integer.parseInt(args[1]);
+		int maxIterations = Integer.parseInt(args[2]);
+		
 		// leggi il file istanza e crea gli oggetti Jobs
 		// inserendoli man mano nella macchina dummy
 		// nell'ordine in cui vengono letti
+		Machine dummyMachine = getDummyMachine(filePath);
 		
-		// fai girare l'algoritmo
+		// crea le macchine previste dal run
+		for (int i = 0; i < numMacchine; i++){
+			
+		}
+		
+		// schedula i lavori secondo la soluzione iniziale
+		
+		// cuore dell'algoritmo
 
 		// stampa risultato su un file
 	}
@@ -46,15 +59,16 @@ public class Main {
 	}
 	
 	/**
+	 * @param filePath 
 	 * @return	un oggetto Machine che contiene tutti i job letti nell'istanza
 	 * 			senza alcun tipo di schedulazione particolare
 	 */
-	private static Machine getDummyMachine() {
+	private static Machine getDummyMachine(String filePath) {
 		Machine dummyMachine = new Machine();
 		List<String> lines = null;
 		// mi sa che la classe Pash e' nuova della Java jdk 1.7
 		// se non l'avete si trova sul sito della oracle
-		Path path = Paths.get("prova.txt");
+		Path path = Paths.get(filePath);
 		try {
 			lines = Files.readAllLines(path, StandardCharsets.UTF_8);
 		} catch (IOException e) {
