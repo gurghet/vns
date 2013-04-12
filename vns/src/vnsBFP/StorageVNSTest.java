@@ -54,10 +54,10 @@ public class StorageVNSTest {
 	}
 
 	/**
-	 * Test method for {@link vnsBFP.StorageVNS#soluzioneIniziale(java.util.ArrayList)}.
+	 * Test method for {@link vnsBFP.StorageVNS#inizializzaCoiJob(java.util.ArrayList)}.
 	 */
 	@Test
-	public void testSoluzioneIniziale() {
+	public void testinizializzaCoiJob() {
 		// SET-UP
 		ArrayList<Job> testJobs = new ArrayList<Job>();
 		testJobs.add(new Job("job1", 0, 4, 17, 4));
@@ -65,7 +65,7 @@ public class StorageVNSTest {
 		testJobs.add(new Job("job3", 0, 12, 32, 5));
 		//	//	//
 		
-		storageVNS1.soluzioneIniziale(testJobs);
+		storageVNS1.inizializzaCoiJob(testJobs);
 		
 		// TESTS
 		assertEquals(storageVNS1.getNumberOfJobsOnMachine(0), 3);
