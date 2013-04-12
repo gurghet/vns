@@ -1,16 +1,15 @@
 package vnsBFP;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Andrea Passaglia
- * @author Paolo Fontanelli
  * @version 0.1
  */
 public class Main {
@@ -26,25 +25,41 @@ public class Main {
 	 * @param args	String[] contenente: nome file istanza, numero macchine, numero mosse
 	 */
 	public static void main(String[] args) {
-		// questi puoi settarli nell’IDE così:
-		// 
 		String filePath = args[0];
-		int numMacchine = Integer.parseInt(args[1]);
-		int maxIterations = Integer.parseInt(args[2]);
+		final int numMacchine = Integer.parseInt(args[1]);
+		final int maxIterations = Integer.parseInt(args[2]);
+		
+		// inizializza la classe manager con le macchine previste
+		StorageVNS soluzione = new StorageVNS(numMacchine);
 		
 		// leggi il file istanza e crea gli oggetti Jobs
 		// inserendoli man mano nella macchina dummy
 		// nell'ordine in cui vengono letti
-		Machine dummyMachine = getDummyMachine(filePath);
+		ArrayList<Job> jobArray = getJobArray(filePath);
 		
-		// crea le macchine previste dal run
-		for (int i = 0; i < numMacchine; i++){
-			
-		}
-		
-		// schedula i lavori secondo la soluzione iniziale
+		// schedula i lavori secondo la soluzione iniziale s
+		soluzione.inizializzaCoiJob(jobArray);
 		
 		// cuore dell'algoritmo
+		for (int i = 0; i < maxIterations; i++) {
+			int k = 1;
+			int kmax = 48;
+			// while k<=k_{max}
+			while (k<=kmax ) {
+				// shaking: select a random solution x'€Nk(s)
+				StorageVNS soluzioneNuova = soluzione.muoviCasualmenteNelNeighborhood(k);
+				// Move or not:
+				// if solution x' is better than s
+				if (soluzioneNuova.calculateTwt() < soluzione.calculateTwt()) {
+					// s=x'; k=1;
+					soluzione = soluzioneNuova;
+					k = 1;
+				} else {
+					// k=k%k_{max}+1
+					k = k % kmax + 1; // funziona solo se i neighborhoods 1 based
+				}
+			}
+		}
 
 		// stampa risultato su un file
 	}
@@ -63,8 +78,8 @@ public class Main {
 	 * @return	un oggetto Machine che contiene tutti i job letti nell'istanza
 	 * 			senza alcun tipo di schedulazione particolare
 	 */
-	private static Machine getDummyMachine(String filePath) {
-		Machine dummyMachine = new Machine();
+	private static ArrayList<Job> getJobArray(String filePath) {
+		ArrayList<Job> jobArray = new ArrayList<Job>();
 		List<String> lines = null;
 		// mi sa che la classe Pash e' nuova della Java jdk 1.7
 		// se non l'avete si trova sul sito della oracle
@@ -83,16 +98,16 @@ public class Main {
 	    String[] jobLine;
 	    for (int i = 0; i < nJobs; i++) {
 			jobLine = lines.remove(0).trim().split("\\s+");
-			Job newJob = new Job();
-			newJob.id = i;
-			newJob.procTime = Integer.parseInt(jobLine[0]);
-			newJob.dueDate = Integer.parseInt(jobLine[1]);
-			newJob.weight = Integer.parseInt(jobLine[2]);
-			dummyMachine.jobs.add(newJob);
-			log(dummyMachine.jobs.get(i));
+			int releaseDate = 0;
+			int executionTime = Integer.parseInt(jobLine[0]);
+			int dueDate = Integer.parseInt(jobLine[1]);
+			int weightCost = Integer.parseInt(jobLine[2]);
+			Job newJob = new Job(Integer.toString(i), releaseDate, executionTime, dueDate, weightCost);
+			jobArray.add(newJob);
+			log("Aggiunto il job" + jobArray.get(jobArray.size()-1));
 		}
 	    
-		return dummyMachine;
+		return jobArray;
 	}
 
 }
