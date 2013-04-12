@@ -4,6 +4,7 @@
 package vnsBFP;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -72,4 +73,22 @@ public class StorageVNSTest {
 		assertEquals(storageVNS1.calculateTwt(), 0.0, 1e-12);
 	}
 
+	/**
+	 * Test method for {@link vnsBFP.StorageVNS#muoviCasualmenteNelNeighborhood(int)}.
+	 */
+	@Test
+	public void testmuoviCasualmenteNelNeighborhood() {
+		// SET-UP
+		ArrayList<Job> testJobs = new ArrayList<Job>();
+		testJobs.add(new Job("job1", 0, 4, 10, 3));
+		testJobs.add(new Job("job2", 0, 6, 6, 1));
+		testJobs.add(new Job("job3", 0, 12, 32, 2));
+		//	//	//
+		
+		storageVNS1.inizializzaCoiJob(testJobs);
+		StorageVNS nuovaSoluzione = storageVNS1.muoviCasualmenteNelNeighborhood(1);
+		
+		// TESTS
+		assertTrue(nuovaSoluzione.calculateTwt() < storageVNS1.calculateTwt());
+	}
 }

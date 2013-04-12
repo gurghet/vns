@@ -29,6 +29,28 @@ public class StorageVNS
 		}
 	}
 	
+	/**
+	 * Costruttore di copia
+	 * @param storageVNS StorageVNS da clonare
+	 */
+	public StorageVNS(StorageVNS storageVNS) {
+		this.allMachines = storageVNS.getAllMachines();
+		this.currentPositionArray = storageVNS.getCurrentPositionArray();
+		this.twt = storageVNS.getTwt();
+	}
+	
+	protected ArrayList<ArrayList<Job>> getAllMachines() {
+		return allMachines;
+	}
+
+	protected int[] getCurrentPositionArray() {
+		return currentPositionArray;
+	}
+
+	protected float getTwt() {
+		return twt;
+	}
+
 	public int getNumberOfMachines()
 	{
 		return allMachines.size();
@@ -430,7 +452,7 @@ public class StorageVNS
 	public float calculateTwt()
 	{
 		// TODO questa funzione calcola il twt anche se è già stato calcolato
-		//      è possibile che il twt non cambi tra due chiamate?
+		//      è possibile che il twt non cambi tra due chiamate o cambia per forza?
 		
 		float resultingTwt = 0;
 		for(int a = 0; a < allMachines.size(); a++)
@@ -451,6 +473,7 @@ public class StorageVNS
 				}
 			}
 		}
+		Main.log("TWT = " + resultingTwt);
 		return resultingTwt;
 	}
 	
@@ -489,6 +512,10 @@ public class StorageVNS
 		
 	}
 
+	/**
+	 * @param k il numero del neighborhood da esplorare
+	 * @return uno <b>StorageVNS</b> con la nuova soluzione 
+	 */
 	public StorageVNS muoviCasualmenteNelNeighborhood(int k) {
 		// TODO crea una deep-copy e la muove, meglio sarebbe avere sempre
 		//      due soluzioni e avere delle mosse che si possono annullare
@@ -496,8 +523,11 @@ public class StorageVNS
 		//      ad esempio fare una mossa sulla soluzione 2 e se non porta
 		//      a niente di buono annullare solo la mossa e non buttare via
 		//      tutta la classe
+		StorageVNS nuovaSoluzione = new StorageVNS(this);
 		
-		return null;
+		// TODO per ora non muove proprio niente
+		
+		return nuovaSoluzione;
 	}
 
 }
