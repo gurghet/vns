@@ -70,8 +70,9 @@ public class Job
 	}
 	
 	public String toString() {
-		return name + " (r:" + this.releaseTime + ", e:"
-				+ this.executionTime + ", dd:" + this.dueDate + ", w:" + this.weight;
+		/*return name + " (r:" + this.releaseTime + ", e:"
+				+ this.executionTime + ", dd:" + this.dueDate + ", w:" + this.weight;*/
+		return name;
 		
 	}
 }

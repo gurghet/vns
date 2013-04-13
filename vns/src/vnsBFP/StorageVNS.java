@@ -530,4 +530,7 @@ public class StorageVNS
 		return nuovaSoluzione;
 	}
 
+	public String toString() {
+		return allMachines.toString() + "\n TWT = " + this.calculateTwt();
+	}
 }

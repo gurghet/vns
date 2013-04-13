@@ -25,9 +25,23 @@ public class Main {
 	 * @param args	String[] contenente: nome file istanza, numero macchine, numero mosse
 	 */
 	public static void main(String[] args) {
-		String filePath = args[0];
-		final int numMacchine = Integer.parseInt(args[1]);
-		final int maxIterations = Integer.parseInt(args[2]);
+		String filePath = null;
+		int numMacchine = 1;
+		int maxIterations = 100;
+		if (args.length == 3) {
+			filePath = args[0];
+			numMacchine = Integer.parseInt(args[1]);
+			maxIterations = Integer.parseInt(args[2]);			
+		} else if (args.length == 2) {
+			filePath = args[0];
+			numMacchine = Integer.parseInt(args[1]);
+		} else if (args.length == 1) {
+			filePath = args[0];
+		}
+		if (filePath == null) {
+			System.out.println("File istanza di problema non specificato");
+			System.exit(0);
+		}
 		
 		// inizializza la classe manager con le macchine previste
 		StorageVNS soluzione = new StorageVNS(numMacchine);
@@ -39,29 +53,38 @@ public class Main {
 		
 		// schedula i lavori secondo la soluzione iniziale s
 		soluzione.inizializzaCoiJob(jobArray);
+		float twtIniziale = soluzione.calculateTwt();
 		
 		// cuore dell'algoritmo
 		for (int i = 0; i < maxIterations; i++) {
+			log("-- iterazione " + i);
 			int k = 1;
 			int kmax = 48;
 			// while k<=k_{max}
-			while (k<=kmax ) {
+			while (k<=kmax) {
+				log("k=" + k);
 				// shaking: select a random solution x'€Nk(s)
 				StorageVNS soluzioneNuova = soluzione.muoviCasualmenteNelNeighborhood(k);
 				// Move or not:
 				// if solution x' is better than s
 				if (soluzioneNuova.calculateTwt() < soluzione.calculateTwt()) {
+					log("la nuova soluzione vale " + soluzioneNuova.calculateTwt()
+							+ ", è migliore di quella vecchia che vale "
+							+ soluzione.calculateTwt());
 					// s=x'; k=1;
 					soluzione = soluzioneNuova;
 					k = 1;
 				} else {
 					// k=k%k_{max}+1
-					k = k % kmax + 1; // funziona solo se i neighborhoods 1 based
+					k = k % (kmax + 1) + 1; // funziona solo se i neighborhoods 1 based
 				}
 			}
 		}
 
 		// stampa risultato su un file
+		// TODO per ora lo stampa a console
+		log(soluzione);
+		log("Costo soluzione iniziale: " + twtIniziale);
 	}
 	
 	/**
