@@ -58,25 +58,22 @@ public class Main {
 		// cuore dell'algoritmo
 		for (int i = 0; i < maxIterations; i++) {
 			log("-- iterazione " + i);
-			int k = 1;
-			int kmax = 48;
+			int k = 0;
+			int kmax = 47;
 			// while k<=k_{max}
 			while (k<=kmax) {
-				log("k=" + k);
+				//log("k=" + k);
 				// shaking: select a random solution x'€Nk(s)
 				StorageVNS soluzioneNuova = soluzione.muoviCasualmenteNelNeighborhood(k);
 				// Move or not:
 				// if solution x' is better than s
 				if (soluzioneNuova.calculateTwt() < soluzione.calculateTwt()) {
-					log("la nuova soluzione vale " + soluzioneNuova.calculateTwt()
-							+ ", è migliore di quella vecchia che vale "
-							+ soluzione.calculateTwt());
 					// s=x'; k=1;
 					soluzione = soluzioneNuova;
-					k = 1;
+					k = 0;
 				} else {
 					// k=k%k_{max}+1
-					k = k % (kmax + 1) + 1; // funziona solo se i neighborhoods 1 based
+					k = k % (kmax + 1) + 1;
 				}
 			}
 		}

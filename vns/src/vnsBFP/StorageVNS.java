@@ -1,6 +1,9 @@
 package vnsBFP;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Random;
 
 
 public class StorageVNS
@@ -18,7 +21,6 @@ public class StorageVNS
 	
 	public StorageVNS(int nMachines)
 	{
-		twt = 0;
 		currentPositionArray = new int[nMachines];
 		allMachines = new ArrayList<ArrayList<Job>>();
 		
@@ -34,8 +36,12 @@ public class StorageVNS
 	 * @param storageVNS StorageVNS da clonare
 	 */
 	public StorageVNS(StorageVNS storageVNS) {
-		this.allMachines = storageVNS.getAllMachines();
-		this.currentPositionArray = storageVNS.getCurrentPositionArray();
+		this.allMachines = new ArrayList<ArrayList<Job>>();
+		for(int x = 0; x < storageVNS.getNumberOfMachines() ; x++)
+		{
+			allMachines.add(new ArrayList<Job>(storageVNS.getMachine(x)));
+		}
+		this.currentPositionArray = storageVNS.getCurrentPositionArray().clone();
 		this.twt = storageVNS.getTwt();
 	}
 	
@@ -91,7 +97,23 @@ public class StorageVNS
 	
 	// Mosse
 	
-	public void SwapOnOneMachine(int range, int repeat, ArrayList<Job> machine, int position)
+	/**
+	 * @param range raggio in cui verranno effettuati gli swap
+	 * @param repeat quante volte verrà ripetuta questa mossa
+	 * alla fine sto metodo fa un po’ le cose a casaccio, ma in
+	 * fondo è un algoritmo random no?
+	 */
+	public void swapOnOneMachine(int range, int repeat) {
+		for (int i = 0; i < this.getNumberOfMachines(); i++) {
+			// range = 0 è come dire range = nmax
+			if (range == 0) range = this.getNumberOfJobsOnMachine(i);
+			for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
+				_swapOnOneMachine_onMachine_onPosition(range, repeat, allMachines.get(i), j);
+			}
+		}
+	}
+	
+	private void _swapOnOneMachine_onMachine_onPosition(int range, int repeat, ArrayList<Job> machine, int position)
 	{
 		Job consideredJob = machine.get(position);
 		int leftLimit = 0;
@@ -110,8 +132,8 @@ public class StorageVNS
 			rightLimit = position + range;
 		}
 		
-		System.out.println("Limite sinistro: "+leftLimit);
-		System.out.println("Limite destro: "+rightLimit);
+		//System.out.println("Limite sinistro: "+leftLimit);
+		//System.out.println("Limite destro: "+rightLimit);
 		
 		// assume valore positivo solo quando trovo una combinazione che migliora il twt. indica la posizione
 		// ove devo spostare il job considerato per  ottenere il miglioramento.
@@ -126,11 +148,10 @@ public class StorageVNS
 				machine.set(position, substitutedJob);
 				machine.set(x, consideredJob);
 				float newTwt = calculateTwt();
-				System.out.println("Nuovo twt: "+newTwt);
-				if(newTwt < tempTwt) // manca condizione di validit� in base alla priorit�
+				if(newTwt < tempTwt) // manca condizione di validità in base alla priorit�
 				{
 					swapPosition = x;
-					System.out.println("Trovato un miglioramento");
+					//System.out.println("Trovato un miglioramento");
 					tempTwt = newTwt;
 				}
 				machine.set(position, consideredJob);
@@ -144,9 +165,8 @@ public class StorageVNS
 			machine.set(swapPosition, consideredJob);
 			machine.set(position, j);
 			twt = tempTwt;
+			//printResult();
 		}
-		
-		printResult();
 	}
 	
 	public void TransferOnOneMachine(int range, int repeat, ArrayList<Job> machine, int position)
@@ -458,7 +478,7 @@ public class StorageVNS
 		for(int a = 0; a < allMachines.size(); a++)
 		{
 			ArrayList<Job> machine = allMachines.get(a);
-			System.out.println("Calcolo il twt su: "+machine.size()+" job");
+			//System.out.println("Calcolo il twt su: "+machine.size()+" job");
 			Job j = null;
 			float time = 0;
 			for(int b = 0; b < machine.size(); b++)
@@ -473,7 +493,7 @@ public class StorageVNS
 				}
 			}
 		}
-		Main.log("TWT = " + resultingTwt);
+		//Main.log("TWT = " + resultingTwt);
 		return resultingTwt;
 	}
 	
@@ -509,7 +529,7 @@ public class StorageVNS
 		for (Job job : jobArray) {
 			addJobOnMachine(0, job);
 		}
-		
+		twt = calculateTwt();
 	}
 
 	/**
@@ -525,12 +545,48 @@ public class StorageVNS
 		//      tutta la classe
 		StorageVNS nuovaSoluzione = new StorageVNS(this);
 		
-		// TODO per ora non muove proprio niente
+		// parametro r è il range della mossa
+		int range;
+		// parametro l è il numero di ripetizioni della mossa
+		int repeat;
+		// parametro che indica il codice della mossa
+		int moveCode; Method move = null;
+		
+		moveCode = k % 4; // ci sono solo 4 mosse numerate da 0 a 3
+		range = ((int) (Math.floor(k / 4))) % 4; // ci sono solo 4 possibilita [2,5,10,n_max]
+		repeat = ((int)  (Math.floor(k/16))) % 3; // ci sono solo 3 possibilità [1,2,3]
+		
+		if (range == 0) range = 2;
+		if (range == 1) range = 5;
+		if (range == 2) range = 10;
+		if (range == 3) range = 0; // nella funzione vale come nmax
+		
+		try {
+			if (moveCode == 0) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+			if (moveCode == 1) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+			if (moveCode == 2) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+			if (moveCode == 3) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+		} catch (NoSuchMethodException | SecurityException e) {
+			// TODO c’è qualcosa che non va se finisce qui
+			Main.log("la riflessività non ha funzionato");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		try {
+			move.invoke(nuovaSoluzione, range, repeat);
+		} catch (IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			// TODO c’è qualcosa che non va se finisce qui
+			Main.log("la riflessività non ha funzionato nemmeno qui");
+			e.printStackTrace();
+			System.exit(1);
+		}
 		
 		return nuovaSoluzione;
 	}
 
 	public String toString() {
-		return allMachines.toString() + "\n TWT = " + this.calculateTwt();
+		return allMachines.toString() + "\nCosto soluzione finale = " + this.calculateTwt();
 	}
 }
