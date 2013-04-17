@@ -64,12 +64,11 @@ public class Main {
 			while (k<=kmax) {
 				//log("k=" + k);
 				// shaking: select a random solution x'€Nk(s)
-				StorageVNS soluzioneNuova = soluzione.muoviCasualmenteNelNeighborhood(k);
+				boolean andiamoAvanti = soluzione.muoviCasualmenteNelNeighborhood(k);
 				// Move or not:
 				// if solution x' is better than s
-				if (soluzioneNuova.calculateTwt() < soluzione.calculateTwt()) {
+				if (andiamoAvanti) {
 					// s=x'; k=1;
-					soluzione = soluzioneNuova;
 					k = 0;
 				} else {
 					// k=k%k_{max}+1

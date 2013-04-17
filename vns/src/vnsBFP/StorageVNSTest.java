@@ -86,9 +86,8 @@ public class StorageVNSTest {
 		//	//	//
 		
 		storageVNS1.inizializzaCoiJob(testJobs);
-		StorageVNS nuovaSoluzione = storageVNS1.muoviCasualmenteNelNeighborhood(1);
 		
 		// TESTS
-		assertTrue(nuovaSoluzione.calculateTwt() < storageVNS1.calculateTwt());
+		assertTrue(storageVNS1.muoviCasualmenteNelNeighborhood(1));
 	}
 }

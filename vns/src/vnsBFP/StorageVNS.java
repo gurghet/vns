@@ -536,14 +536,13 @@ public class StorageVNS
 	 * @param k il numero del neighborhood da esplorare
 	 * @return uno <b>StorageVNS</b> con la nuova soluzione 
 	 */
-	public StorageVNS muoviCasualmenteNelNeighborhood(int k) {
+	public boolean muoviCasualmenteNelNeighborhood(int k) {
 		// TODO crea una deep-copy e la muove, meglio sarebbe avere sempre
 		//      due soluzioni e avere delle mosse che si possono annullare
 		//      in modo da non dover sempre istanziare nuove classi (quindi
 		//      ad esempio fare una mossa sulla soluzione 2 e se non porta
 		//      a niente di buono annullare solo la mossa e non buttare via
 		//      tutta la classe
-		StorageVNS nuovaSoluzione = new StorageVNS(this);
 		
 		// parametro r è il range della mossa
 		int range;
@@ -573,8 +572,9 @@ public class StorageVNS
 			System.exit(1);
 		}
 		
+		boolean mossaMigliorativa = false;
 		try {
-			move.invoke(nuovaSoluzione, range, repeat);
+			mossaMigliorativa = (boolean) move.invoke(this, range, repeat);
 		} catch (IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			// TODO c’è qualcosa che non va se finisce qui
@@ -583,7 +583,7 @@ public class StorageVNS
 			System.exit(1);
 		}
 		
-		return nuovaSoluzione;
+		return mossaMigliorativa;
 	}
 
 	public String toString() {
