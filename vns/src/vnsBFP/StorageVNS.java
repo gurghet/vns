@@ -103,17 +103,20 @@ public class StorageVNS
 	 * alla fine sto metodo fa un po’ le cose a casaccio, ma in
 	 * fondo è un algoritmo random no?
 	 */
-	public void swapOnOneMachine(int range, int repeat) {
+	public boolean swapOnOneMachine(int range, int repeat) {
+		boolean miglioramentoAvvenuto = false;
 		for (int i = 0; i < this.getNumberOfMachines(); i++) {
 			// range = 0 è come dire range = nmax
 			if (range == 0) range = this.getNumberOfJobsOnMachine(i);
 			for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
-				_swapOnOneMachine_onMachine_onPosition(range, repeat, allMachines.get(i), j);
+				miglioramentoAvvenuto =
+						miglioramentoAvvenuto || _swapOnOneMachine_onMachine_onPosition(range, repeat, allMachines.get(i), j);
 			}
 		}
+		return miglioramentoAvvenuto;
 	}
 	
-	private void _swapOnOneMachine_onMachine_onPosition(int range, int repeat, ArrayList<Job> machine, int position)
+	private boolean _swapOnOneMachine_onMachine_onPosition(int range, int repeat, ArrayList<Job> machine, int position)
 	{
 		Job consideredJob = machine.get(position);
 		int leftLimit = 0;
