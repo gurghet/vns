@@ -120,8 +120,6 @@ public class StorageVNS
 		Job consideredJob = machine.get(position);
 		int leftLimit = 0;
 		int rightLimit = machine.size();
-		//float tempTwt = twt;
-		//String s = "";
 		
 		// Imposto il limite sinistro del range da considerare
 		if((position - range) > 0)
@@ -134,51 +132,27 @@ public class StorageVNS
 		{
 			rightLimit = position + range;
 		}
-				
-		// assume valore positivo solo quando trovo una combinazione che migliora il twt. indica la posizione
-		// ove devo spostare il job considerato per  ottenere il miglioramento.
-		//int swapPosition = -1;		
-		
 		
 		int distance = rightLimit - leftLimit;
 		int posInRange = (int)(Math.random()*distance);
 		int newPos = leftLimit + posInRange;
-		//System.out.println("La posizione con cui faccio lo swap è: "+newPos);
 		
-		// Provo tutte le combinazioni possibili nei limiti appena calcolati
-		//for(int x = leftLimit; x < rightLimit + 1; x++)
-		//{
-			//System.out.println("");
-			
-			//if(x != position && x < machine.size())
-			//{
 		Job substitutedJob = machine.get(newPos);
-		//System.out.println("Effettuo lo swap con la posizione del job: "+substitutedJob.getName());
+
 		machine.set(position, substitutedJob);
 		machine.set(newPos, consideredJob);
-		//s = "";
-		//for(int w = 0; w < machine.size(); w++)
-		//{
-			//s = s + machine.get(w).getName() + ", ";
-		//}
+
 		float newTwt = calculateTwt();
-		//System.out.println("Così risulta: ");
-		//System.out.println(s);
-		//System.out.println("Per un TWT di: "+newTwt);
 		
 		if(newTwt < twt) // manca condizione di validit� in base alla priorit�.
 		{
-			//swapPosition = x;
-			//System.out.println("Perciò ho trovato un miglioramento");
 			twt = newTwt;
-			//printResult();
 			return true;
 		}
 		else
 		{
 			machine.set(position, consideredJob);
 			machine.set(newPos, substitutedJob);
-			//printResult();
 			return false;
 		}
 	}
