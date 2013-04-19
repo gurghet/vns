@@ -56,6 +56,7 @@ public class Main {
 		float twtIniziale = soluzione.calculateTwt();
 		
 		// cuore dell'algoritmo
+		// TODO mettere un timeout
 		for (int i = 0; i < maxIterations; i++) {
 			log("-- iterazione " + i);
 			int k = 0;
