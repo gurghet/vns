@@ -54,11 +54,11 @@ public class Main {
 		// schedula i lavori secondo la soluzione iniziale s
 		soluzione.inizializzaCoiJob(jobArray);
 		float twtIniziale = soluzione.calculateTwt();
+		int counter = 0;
 		
 		// cuore dell'algoritmo
 		// TODO mettere un timeout
-		for (int i = 0; i < maxIterations; i++) {
-			log("-- iterazione " + i);
+		while (counter < maxIterations) {
 			int k = 0;
 			int kmax = 47;
 			// while k<=k_{max}
@@ -66,6 +66,8 @@ public class Main {
 				//log("k=" + k);
 				// shaking: select a random solution x'€Nk(s)
 				boolean andiamoAvanti = soluzione.muoviCasualmenteNelNeighborhood(k);
+				counter++;
+				if(counter == maxIterations) break;
 				// Move or not:
 				// if solution x' is better than s
 				if (andiamoAvanti) {
@@ -82,6 +84,7 @@ public class Main {
 		// TODO per ora lo stampa a console
 		log(soluzione);
 		log("Costo soluzione iniziale: " + twtIniziale);
+		log("Numero mosse eseguite = " + counter);
 	}
 	
 	/**
