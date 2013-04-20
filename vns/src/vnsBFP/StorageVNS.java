@@ -52,7 +52,7 @@ public class StorageVNS
 		return currentPositionArray;
 	}
 
-	protected float getTwt() {
+	public float getTwt() {
 		return twt;
 	}
 
@@ -312,8 +312,9 @@ public class StorageVNS
 		// Calcolo randomicamente la macchina con cui fare il transfert. non accetto la stessa macchina su cui sto prelevando
 		while(machineNumber == index)
 		{
-			int numberOfMachines = allMachines.size() - 1;
+			int numberOfMachines = allMachines.size();
 			machineNumber = (int)(Math.random()*numberOfMachines);
+			// TODO 
 		}
 		//system.out.println("La macchina con cui far� il transfer �: "+machineNumber);
 		ArrayList<Job> destMachine = allMachines.get(machineNumber);
@@ -336,6 +337,8 @@ public class StorageVNS
 		int distance = rightLimit - leftLimit;
 		int posInRange = (int)(Math.random()*distance);
 		int newPos = leftLimit + posInRange;
+		
+		if (newPos > destMachine.size()-1) newPos = destMachine.size();
 		
 		// trasferisco il job
 		destMachine.add(newPos, sourceMachine.remove(position));
@@ -444,10 +447,10 @@ public class StorageVNS
 		if (range == 3) range = 0; // nella funzione vale come nmax
 
 		try {
-			if (moveCode == 0) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
-			if (moveCode == 1) move = this.getClass().getMethod("transferOnOneMachine", int.class, int.class);
-			if (moveCode == 2) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
-			if (moveCode == 3) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+			if (moveCode == 0) move = this.getClass().getMethod("transferOnOneMachine", int.class, int.class);
+			if (moveCode == 1) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+			if (moveCode == 2) move = this.getClass().getMethod("transferAcrossMachines", int.class, int.class);
+			if (moveCode == 3) move = this.getClass().getMethod("swapAcrossMachines", int.class, int.class);
 		} catch (NoSuchMethodException | SecurityException e) {
 			// TODO c’è qualcosa che non va se finisce qui
 			Main.log("la riflessività non ha funzionato");
@@ -467,6 +470,30 @@ public class StorageVNS
 		}
 
 		return mossaMigliorativa;
+	}
+	
+	/**
+	 *  stampa delle robe se ci sono lavori uguali o non sono 300
+	 */
+	public void check_consistency() {
+		int count = 0;
+		for (ArrayList<Job> machine : allMachines) {
+			for (int i = 0; i < machine.size(); i++) {
+				count++;
+				for (ArrayList<Job> machine2 : allMachines) {
+					for (int j = 0; j < machine2.size(); j++) {
+						if (machine == machine2) {
+							if (i != j) {
+								if (machine.get(i) == machine.get(j)) Main.log("2 job uguali sulla stessa macchina");
+							}
+						} else {
+							if (machine.get(i) == machine2.get(j)) Main.log("2 job uguali su due macchine diverse");
+						}
+					}
+				}
+			}
+		}
+		if (count != 300) Main.log("i job non sono 300, sono " + count);
 	}
 
 	public String toString() {
