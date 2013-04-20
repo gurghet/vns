@@ -13,6 +13,8 @@ public class StorageVNS {
 
 	// TWT attuale.
 	private long twt;
+	
+	private int nMachines = 0;
 
 	public StorageVNS(int nMachines) {
 		currentPositionArray = new int[nMachines];
@@ -22,22 +24,7 @@ public class StorageVNS {
 			allMachines.add(new ArrayList<Job>());
 			currentPositionArray[x] = 0;
 		}
-	}
-
-	/**
-	 * Costruttore di copia
-	 * 
-	 * @param storageVNS
-	 *            StorageVNS da clonare
-	 */
-	public StorageVNS(StorageVNS storageVNS) {
-		this.allMachines = new ArrayList<ArrayList<Job>>();
-		for (int x = 0; x < storageVNS.getNumberOfMachines(); x++) {
-			allMachines.add(new ArrayList<Job>(storageVNS.getMachine(x)));
-		}
-		this.currentPositionArray = storageVNS.getCurrentPositionArray()
-				.clone();
-		this.twt = storageVNS.getTwt();
+		this.nMachines = nMachines;
 	}
 
 	protected ArrayList<ArrayList<Job>> getAllMachines() {
@@ -430,7 +417,9 @@ public class StorageVNS {
 		int moveCode;
 		Method move = null;
 
-		moveCode = k % 4; // ci sono solo 4 mosse numerate da 0 a 3
+		if (nMachines > 1) moveCode = k % 4; // ci sono solo 4 mosse numerate da 0 a 3
+		else moveCode = k % 2;
+		
 		range = ((int) (Math.floor(k / 4))) % 4; // ci sono solo 4 possibilita
 													// [2,5,10,n_max]
 		repeat = (((int) (Math.floor(k / 16))) % 3) + 1; // ci sono solo 3 possibilità
@@ -449,15 +438,19 @@ public class StorageVNS {
 			if (moveCode == 0)
 				move = this.getClass().getMethod("transferOnOneMachine",
 						int.class, int.class);
+			else
 			if (moveCode == 1)
 				move = this.getClass().getMethod("swapOnOneMachine", int.class,
 						int.class);
-			if (moveCode == 2)
+			else
+			if (moveCode == 2 && nMachines != 1)
 				move = this.getClass().getMethod("transferAcrossMachines",
 						int.class, int.class);
-			if (moveCode == 3)
+			else
+			if (moveCode == 3 && nMachines != 1)
 				move = this.getClass().getMethod("swapAcrossMachines",
 						int.class, int.class);
+			else throw new NoSuchMethodException();
 		} catch (NoSuchMethodException | SecurityException e) {
 			// TODO c’è qualcosa che non va se finisce qui
 			Main.log("la riflessività non ha funzionato");
