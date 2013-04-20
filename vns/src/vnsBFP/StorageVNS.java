@@ -306,9 +306,7 @@ public class StorageVNS
 
 	public boolean _transferAcrossMachines_onMachine_onPosition(int range, int repeat, ArrayList<Job> sourceMachine, int position)
 	{
-		ArrayList<Job> result = new ArrayList<Job>();
 		int index = allMachines.indexOf(sourceMachine);
-		String s = "";
 		int machineNumber = index;
 		
 		// Calcolo randomicamente la macchina con cui fare il transfert. non accetto la stessa macchina su cui sto prelevando
@@ -338,68 +336,25 @@ public class StorageVNS
 		int distance = rightLimit - leftLimit;
 		int posInRange = (int)(Math.random()*distance);
 		int newPos = leftLimit + posInRange;
-		//system.out.println("La posizione con cui faccio il transfer �: "+newPos);
 		
-		
-		//Inizio a riempire result con le posizioni fino a leftLimit.
-		for(int x = 0; x < leftLimit; x++)
-		{
-			result.add(destMachine.get(x));
-			s = s + destMachine.get(x).getName() + "; ";
-		}
-		
-		// Ora continuo a riempire fino alla posizione newPos.		
-		
-		for(int x = leftLimit; x < newPos; x++)
-		{
-			result.add(destMachine.get(x));
-			s = s + destMachine.get(x).getName() + "; ";
-		}
-		
-		// Metto in newPos il job che va trasferito
-		result.add(sourceMachine.get(position));
-		s = s + sourceMachine.get(position).getName() + "; ";
-		
-		// Aggiungo tutti gli altri fino in fondo
-		for(int x = newPos; x < destMachine.size(); x++)
-		{
-			result.add(destMachine.get(x));
-			s = s + destMachine.get(x).getName() + "; ";
-		}
-		
-		// imposto la nuova macchina al posto di quella estratta.
-		allMachines.set(machineNumber, result);
-		
-		// Creo una copia della originalMachine senza il job da spostare e la metto al posto dell'originale.
-		ArrayList<Job> orig = new ArrayList<Job>();
-		for(int x = 0; x < sourceMachine.size(); x++)
-		{
-			if(x != position)
-			{
-				orig.add(sourceMachine.get(x));
-			}
-		}
-		allMachines.set(index, orig);
+		// trasferisco il job
+		destMachine.add(newPos, sourceMachine.remove(position));
 		
 		// Calcolo il twt
 		float newTwt = calculateTwt();
 		
-		// Se il twt migliora lascio tutto com'�, altrimenti rimetto come prima
+		// Se il twt migliora lascio tutto com’è, altrimenti rimetto come prima
 		if(newTwt < twt)
 		{
 			twt = newTwt;
-			printResult();
 			return true;
 		}
 		else
 		{
-			allMachines.set(index, sourceMachine);
-			allMachines.set(machineNumber, destMachine);
-			printResult();
+			sourceMachine.add(position, destMachine.remove(newPos));
 			return false;
 		}
 	}
-	// Metodi temporanei per il funzionamento provvisorio
 
 
 	public float calculateTwt()
@@ -453,7 +408,7 @@ public class StorageVNS
 	 * @param jobArray ArrayList dei job in ordine sparso
 	 */
 	public void inizializzaCoiJob(ArrayList<Job> jobArray) {
-		// just put all the jobs on a machine for now
+		// TODO just put all the jobs on a machine for now
 		for (Job job : jobArray) {
 			addJobOnMachine(0, job);
 		}
