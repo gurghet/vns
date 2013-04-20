@@ -156,17 +156,27 @@ public class StorageVNS
 			return false;
 		}
 	}
+	
+	public boolean transferOnOneMachine(int range, int repeat) {
+		boolean miglioramentoAvvenuto = false;
+		for (int i = 0; i < this.getNumberOfMachines(); i++) {
+			// range = 0 è come dire range = nmax
+			if (range == 0) range = this.getNumberOfJobsOnMachine(i);
+			for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
+				miglioramentoAvvenuto =
+						miglioramentoAvvenuto || _transferOnOneMachine_onMachine_onPosition(range, repeat, allMachines.get(i), j);
+			}
+		}
+		return miglioramentoAvvenuto;
+	}
 
-	public boolean TransferOnOneMachine(int range, int repeat, ArrayList<Job> machine, int position)
+	public boolean _transferOnOneMachine_onMachine_onPosition(int range, int repeat, ArrayList<Job> machine, int position)
 	{
 		//system.out.println("Twt iniziale: "+ twt);
 		
-		if(range != 0)
-		{
 			//aggiungere le ripetizioni e il calcolo del twt
 			int leftLimit = 0;
 			int rightLimit = machine.size() - 1;
-			ArrayList<Job> result = new ArrayList<Job>();
 			
 			// Imposto il limite sinistro del range da considerare e copio la sottolista se alcune posizioni
 			// rimarranno invariate rispetto alla mossa perch� il range � troppo piccolo
@@ -186,76 +196,9 @@ public class StorageVNS
 			int distance = rightLimit - leftLimit;
 			int posInRange = (int)(Math.random()*distance);
 			int newPos = leftLimit + posInRange;
-			//system.out.println("La posizione con cui faccio il transfer �: "+newPos);
-
-			// Variabili per eventuali verifiche
-			String s = "";
 			
-			// Inserisco tutti i job le cui posizioni non saranno toccate, cio� quelli prima di position e newPos.
-			int p;
-			boolean order = true;
-			if(newPos < position)
-			{
-				p = newPos;
-				order = true;
-			}
-			else
-			{
-				p = position;
-				order = false;
-			}
-			
-			for(int x = 0; x < p; x++)
-			{
-					result.add(machine.get(x));
-					s = s + machine.get(x).getName() + "; ";
-					////system.out.println("Aggiungo alla lista il job: "+machine.get(x).getName());
-			}
-			
-			//aggiungo gli altri
-			if(order)
-			{
-				// la prossima posizione � newPos e allora inserisco il job presente in position
-				result.add(machine.get(position));
-				s = s + machine.get(position).getName() + "; ";
-				// e poi ci metto tutti i job fino a position.
-				for(int y = newPos; y < position; y++)
-				{
-					result.add(machine.get(y));
-					s = s + machine.get(y).getName() + "; ";
-				}
-				// salto position che l'ho spostato e inserisco i successivi fino alla fine.
-				for(int y = position + 1; y < machine.size(); y++)
-				{
-					result.add(machine.get(y));
-					s = s + machine.get(y).getName() + "; ";
-				}
-			}
-			else
-			{
-				// La prossima posizione � position, quindi non copio il job da spostare e passo ai successivi fino a newPos.
-				for(int y = position + 1; y <newPos; y++)
-				{
-					result.add(machine.get(y));
-					s = s + machine.get(y).getName() + "; ";
-				}
-				
-				// Ora sono a newPos e devo inserire il job da spostare che ho saltato prima.
-				result.add(machine.get(position));
-				s = s + machine.get(position).getName() + "; ";
-				
-				// Ora aggiungo tutti i successivi fino alla fine.
-				for(int y = newPos; y <machine.size(); y++)
-				{
-					result.add(machine.get(y));
-					s = s + machine.get(y).getName() + "; ";
-				}
-			}
-			
-			// Ora sostituisco la macchina che ho appena creato all'originale.
-			int indexOfMachine = allMachines.indexOf(machine);
-			ArrayList<Job> temp = allMachines.get(indexOfMachine);
-			allMachines.set(indexOfMachine, result);
+			Job toBeInsertedJob = machine.remove(position);
+			machine.add(newPos, toBeInsertedJob);
 			
 			// e calcolo il twt alla nuova configurazione
 			float newTwt = calculateTwt();
@@ -264,25 +207,32 @@ public class StorageVNS
 			if(newTwt < twt)
 			{
 				twt = newTwt;
-				//system.out.println("Twt finale: "+ twt);
 				return true;
 			}
 			else
 			{
-				//system.out.println("Twt finale invariato: "+ twt);
-				allMachines.set(indexOfMachine, temp);
+				// rimetto il job dove stava prima
+				Job toBePutBackJob = machine.remove(newPos);
+				machine.add(position, toBePutBackJob);
 				return false;
 			}
-			
-		}
-		else
-		{
-			return false;
-		}
 		
 	}
+	
+	public boolean swapAcrossMachines(int range, int repeat) {
+		boolean miglioramentoAvvenuto = false;
+		for (int i = 0; i < this.getNumberOfMachines(); i++) {
+			// range = 0 è come dire range = nmax
+			if (range == 0) range = this.getNumberOfJobsOnMachine(i);
+			for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
+				miglioramentoAvvenuto =
+						miglioramentoAvvenuto || _swapAcrossMachines_onMachine_onPosition(range, repeat, allMachines.get(i), j);
+			}
+		}
+		return miglioramentoAvvenuto;
+	}
 
-	public boolean SwapAcrossMachines(int range, int repeat, ArrayList<Job> originalMachine, int position)
+	public boolean _swapAcrossMachines_onMachine_onPosition(int range, int repeat, ArrayList<Job> originalMachine, int position)
 	{
 		Job consideredJob = originalMachine.get(position);
 		
@@ -328,24 +278,23 @@ public class StorageVNS
 			// Calcolo il twt
 			float newTwt = calculateTwt();
 			//system.out.println("Tentativo:");
-			printResult();
+			//printResult();
 			//system.out.println("TWT: "+newTwt);
 			//system.out.println("Fine tentativo.");
 			
 			// Se il twt non migliora rimetto tutto a posto e ritorno false.
-			if(newTwt < twt)
-			{
-				machine.set(swapPos, substitutedJob);
-				originalMachine.set(position, consideredJob);
-				printResult();
-				return false;
-			}
+			
 			// Altrimenti lascio tutto cos� e cambio il twt con quello nuovo.
-			else
+			if (newTwt < twt)
 			{
 				twt = newTwt;
-				printResult();
+				//printResult();
 				return true;
+			} else {
+				machine.set(swapPos, substitutedJob);
+				originalMachine.set(position, consideredJob);
+				//printResult();
+				return false;
 			}
 		}		
 	}
@@ -536,7 +485,7 @@ public class StorageVNS
 
 		try {
 			if (moveCode == 0) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
-			if (moveCode == 1) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
+			if (moveCode == 1) move = this.getClass().getMethod("transferOnOneMachine", int.class, int.class);
 			if (moveCode == 2) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
 			if (moveCode == 3) move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
 		} catch (NoSuchMethodException | SecurityException e) {
