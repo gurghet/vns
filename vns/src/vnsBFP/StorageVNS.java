@@ -232,18 +232,19 @@ public class StorageVNS
 		return miglioramentoAvvenuto;
 	}
 
-	public boolean _swapAcrossMachines_onMachine_onPosition(int range, int repeat, ArrayList<Job> originalMachine, int position)
+	public boolean _swapAcrossMachines_onMachine_onPosition(int range, int repeat, ArrayList<Job> sourceMachine, int position)
 	{
-		Job consideredJob = originalMachine.get(position);
+		Job consideredJob = sourceMachine.get(position);
 		
 		// Calcolo randomicamente la macchina con cui fare il transfert
 		int numberOfMachines = allMachines.size() - 1;
 		int machineNumber = (int)(Math.random()*numberOfMachines);
-		//system.out.println("La macchina con cui far� il transfer �: "+machineNumber);
-		ArrayList<Job> machine = allMachines.get(machineNumber);
+		ArrayList<Job> destMachine = allMachines.get(machineNumber);
+		// TODO controllare che invece che istanziare un nuovo array non sia
+		// più veloce creare una contromossa
 			
 		int leftLimit = 0;
-		int rightLimit = machine.size() - 1;
+		int rightLimit = destMachine.size() - 1;
 		
 		// Imposto il limite sinistro del range da considerare
 		if((position - range) > 0)
@@ -264,7 +265,7 @@ public class StorageVNS
 		int swapPos = leftLimit + posInRange;
 		
 		// Provo a fare lo swap
-		if(swapPos >= machine.size())
+		if(swapPos >= destMachine.size())
 		{
 			//system.out.println("Swap non effettuato perch� la macchina destinazione non ha job nella posizione selezionata");
 			return false;
@@ -272,37 +273,41 @@ public class StorageVNS
 		else
 		{
 			// Effettuo lo scambio
-			Job substitutedJob = machine.get(swapPos);
-			machine.set(swapPos, consideredJob);
-			originalMachine.set(position, substitutedJob);
+			Job substitutedJob = destMachine.get(swapPos);
+			destMachine.set(swapPos, consideredJob);
+			sourceMachine.set(position, substitutedJob);
 			// Calcolo il twt
 			float newTwt = calculateTwt();
-			//system.out.println("Tentativo:");
-			//printResult();
-			//system.out.println("TWT: "+newTwt);
-			//system.out.println("Fine tentativo.");
 			
-			// Se il twt non migliora rimetto tutto a posto e ritorno false.
-			
-			// Altrimenti lascio tutto cos� e cambio il twt con quello nuovo.
 			if (newTwt < twt)
 			{
 				twt = newTwt;
-				//printResult();
 				return true;
 			} else {
-				machine.set(swapPos, substitutedJob);
-				originalMachine.set(position, consideredJob);
-				//printResult();
+				destMachine.set(swapPos, substitutedJob);
+				sourceMachine.set(position, consideredJob);
 				return false;
 			}
 		}		
 	}
+	
+	public boolean transferAcrossMachines(int range, int repeat) {
+		boolean miglioramentoAvvenuto = false;
+		for (int i = 0; i < this.getNumberOfMachines(); i++) {
+			// range = 0 è come dire range = nmax
+			if (range == 0) range = this.getNumberOfJobsOnMachine(i);
+			for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
+				miglioramentoAvvenuto =
+						miglioramentoAvvenuto || _transferAcrossMachines_onMachine_onPosition(range, repeat, allMachines.get(i), j);
+			}
+		}
+		return miglioramentoAvvenuto;
+	}
 
-	public boolean TransferAcrossMachines(int range, int repeat, ArrayList<Job> originalMachine, int position)
+	public boolean _transferAcrossMachines_onMachine_onPosition(int range, int repeat, ArrayList<Job> sourceMachine, int position)
 	{
 		ArrayList<Job> result = new ArrayList<Job>();
-		int index = allMachines.indexOf(originalMachine);
+		int index = allMachines.indexOf(sourceMachine);
 		String s = "";
 		int machineNumber = index;
 		
@@ -313,7 +318,7 @@ public class StorageVNS
 			machineNumber = (int)(Math.random()*numberOfMachines);
 		}
 		//system.out.println("La macchina con cui far� il transfer �: "+machineNumber);
-		ArrayList<Job> machine = allMachines.get(machineNumber);
+		ArrayList<Job> destMachine = allMachines.get(machineNumber);
 		
 		// Calcolo i limiti determinati dal range
 		int rightLimit = position + range;
@@ -324,9 +329,9 @@ public class StorageVNS
 			leftLimit = position - range;
 		}
 		
-		if((position + range) > (machine.size() -1))
+		if((position + range) > (destMachine.size() -1))
 		{
-			rightLimit = machine.size();
+			rightLimit = destMachine.size();
 		}
 		
 		// Calcolo la posizione con cui fare il transfert.
@@ -339,27 +344,27 @@ public class StorageVNS
 		//Inizio a riempire result con le posizioni fino a leftLimit.
 		for(int x = 0; x < leftLimit; x++)
 		{
-			result.add(machine.get(x));
-			s = s + machine.get(x).getName() + "; ";
+			result.add(destMachine.get(x));
+			s = s + destMachine.get(x).getName() + "; ";
 		}
 		
 		// Ora continuo a riempire fino alla posizione newPos.		
 		
 		for(int x = leftLimit; x < newPos; x++)
 		{
-			result.add(machine.get(x));
-			s = s + machine.get(x).getName() + "; ";
+			result.add(destMachine.get(x));
+			s = s + destMachine.get(x).getName() + "; ";
 		}
 		
 		// Metto in newPos il job che va trasferito
-		result.add(originalMachine.get(position));
-		s = s + originalMachine.get(position).getName() + "; ";
+		result.add(sourceMachine.get(position));
+		s = s + sourceMachine.get(position).getName() + "; ";
 		
 		// Aggiungo tutti gli altri fino in fondo
-		for(int x = newPos; x < machine.size(); x++)
+		for(int x = newPos; x < destMachine.size(); x++)
 		{
-			result.add(machine.get(x));
-			s = s + machine.get(x).getName() + "; ";
+			result.add(destMachine.get(x));
+			s = s + destMachine.get(x).getName() + "; ";
 		}
 		
 		// imposto la nuova macchina al posto di quella estratta.
@@ -367,11 +372,11 @@ public class StorageVNS
 		
 		// Creo una copia della originalMachine senza il job da spostare e la metto al posto dell'originale.
 		ArrayList<Job> orig = new ArrayList<Job>();
-		for(int x = 0; x < originalMachine.size(); x++)
+		for(int x = 0; x < sourceMachine.size(); x++)
 		{
 			if(x != position)
 			{
-				orig.add(originalMachine.get(x));
+				orig.add(sourceMachine.get(x));
 			}
 		}
 		allMachines.set(index, orig);
@@ -388,8 +393,8 @@ public class StorageVNS
 		}
 		else
 		{
-			allMachines.set(index, originalMachine);
-			allMachines.set(machineNumber, machine);
+			allMachines.set(index, sourceMachine);
+			allMachines.set(machineNumber, destMachine);
 			printResult();
 			return false;
 		}
