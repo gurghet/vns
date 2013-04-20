@@ -144,13 +144,14 @@ public class StorageVNS
 
 		float newTwt = calculateTwt();
 		
+		// tricotomia
 		if(newTwt < twt) // manca condizione di validit� in base alla priorit�.
 		{
 			twt = newTwt;
 			return true;
-		}
-		else
-		{
+		} else if (newTwt == twt) {
+			return true;
+		} else {
 			machine.set(position, consideredJob);
 			machine.set(newPos, substitutedJob);
 			return false;
@@ -208,8 +209,10 @@ public class StorageVNS
 			{
 				twt = newTwt;
 				return true;
+			} else if (newTwt == twt) {
+				return true;
 			}
-			else
+			else 
 			{
 				// rimetto il job dove stava prima
 				Job toBePutBackJob = machine.remove(newPos);
@@ -283,6 +286,8 @@ public class StorageVNS
 			{
 				twt = newTwt;
 				return true;
+			} else if (newTwt == twt) {
+				return true;
 			} else {
 				destMachine.set(swapPos, substitutedJob);
 				sourceMachine.set(position, consideredJob);
@@ -350,6 +355,8 @@ public class StorageVNS
 		if(newTwt < twt)
 		{
 			twt = newTwt;
+			return true;
+		} else if (newTwt == twt) {
 			return true;
 		}
 		else

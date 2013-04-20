@@ -63,6 +63,7 @@ public class Main {
 			int kmax = 47;
 			// while k<=k_{max}
 			while (k<=kmax) {
+				//log(k);
 				// shaking: select a random solution x'€Nk(s)
 				boolean andiamoAvanti = soluzione.muoviCasualmenteNelNeighborhood(k);
 				counter++;
@@ -71,7 +72,7 @@ public class Main {
 				// if solution x' is better than s
 				if (andiamoAvanti) {
 					// s=x'; k=1;
-					log("TWT diminuito a: " + soluzione.getTwt());
+					log(counter + ": TWT=" + soluzione.getTwt());
 					k = 0;
 				} else {
 					// k=k%k_{max}+1
@@ -109,7 +110,7 @@ public class Main {
 		// se non l'avete si trova sul sito della oracle
 		Path path = Paths.get(filePath);
 		try {
-			lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+			lines = Files.readAllLines(path, StandardCharsets.US_ASCII);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
