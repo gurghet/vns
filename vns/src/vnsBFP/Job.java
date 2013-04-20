@@ -2,10 +2,10 @@ package vnsBFP;
 
 public class Job
 {
-	private float releaseTime;
-	private float executionTime;
-	private float dueDate;
-	private float weight;
+	private long releaseTime;
+	private long executionTime;
+	private long dueDate;
+	private int weight;
 	private String name;
 	
 	/**
@@ -15,7 +15,7 @@ public class Job
 	 * @param dueDateTime due date
 	 * @param weightCost peso del job nel TWT
 	 */
-	public Job(String jobName, float relTime, float execTime, float dueDateTime, float weightCost)
+	public Job(String jobName, long relTime, long execTime, long dueDateTime, int weightCost)
 	{
 		releaseTime = relTime;
 		executionTime = execTime;
@@ -24,22 +24,22 @@ public class Job
 		name = jobName;
 	}
 	
-	public float getRelaseTime()
+	public long getRelaseTime()
 	{
 		return releaseTime;
 	}
 	
-	public float getExecutionTime()
+	public long getExecutionTime()
 	{
 		return executionTime;
 	}
 	
-	public float getDueDate()
+	public long getDueDate()
 	{
 		return dueDate;
 	}
 	
-	public float getWeight()
+	public int getWeight()
 	{
 		return weight;
 	}
@@ -49,22 +49,22 @@ public class Job
 		return name;
 	}
 	
-	public void setDueDate(float time)
+	public void setDueDate(long time)
 	{
 		dueDate = time;
 	}
 	
-	public void setExecutionTime(float time)
+	public void setExecutionTime(long time)
 	{
 		dueDate = time;
 	}
 
-	public void setRelaseTime(float time)
+	public void setRelaseTime(long time)
 	{
 		dueDate = time;
 	}
 	
-	public void setWeight(float w)
+	public void setWeight(int w)
 	{
 		weight = w;
 	}
