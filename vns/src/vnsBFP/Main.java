@@ -67,7 +67,7 @@ public class Main {
 				// shaking: select a random solution x'€Nk(s)
 				boolean andiamoAvanti = soluzione.muoviCasualmenteNelNeighborhood(k);
 				counter++;
-				if(counter == maxIterations) break;
+				if(counter == maxIterations || soluzione.getTwt() == 0) break;
 				// Move or not:
 				// if solution x' is better than s
 				if (andiamoAvanti) {
