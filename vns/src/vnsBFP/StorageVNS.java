@@ -211,19 +211,13 @@ public class StorageVNS {
 		Job consideredJob = sourceMachine.get(position);
 		int index = allMachines.indexOf(sourceMachine);
 		int numberOfMachines = allMachines.size();
-		int machineNumber = (int) (Math.random() * numberOfMachines);
-
-		// Calcolo randomicamente la macchina con cui fare il transfert. non
-		// accetto la stessa da cui prendo il job
-		while (machineNumber == index) {
-			machineNumber = (int) (Math.random() * numberOfMachines);
-		}
+		int destMachineNumber = (int) (Math.random() * numberOfMachines); // potrebbe essere sè stessa
 
 		// range = 0 ����� come dire range = nmax
 		if (range == 0)
-			range = this.getNumberOfJobsOnMachine(machineNumber);
+			range = this.getNumberOfJobsOnMachine(destMachineNumber);
 
-		ArrayList<Job> destMachine = allMachines.get(machineNumber);
+		ArrayList<Job> destMachine = allMachines.get(destMachineNumber);
 
 		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
 		int rightLimit = calculateRightLimitFast(destMachine, position, range);
@@ -246,7 +240,10 @@ public class StorageVNS {
 			return true;
 		} else {
 			destMachine.set(swapPos, substitutedJob);
-			// TODO aggiornare jobMap
+			jobMap.remove(consideredJob);
+			jobMap.put(consideredJob, destMachineNumber);
+			jobMap.remove(substitutedJob);
+			jobMap.put(substitutedJob, allMachines.indexOf(sourceMachine));
 			sourceMachine.set(position, consideredJob);
 			return false;
 		}
@@ -274,13 +271,10 @@ public class StorageVNS {
 		int index = allMachines.indexOf(sourceMachine);
 		int machineNumber = index;
 
-		// Calcolo randomicamente la macchina con cui fare il transfert. non
-		// accetto la stessa macchina su cui sto prelevando
-		// TODO: controllare se migliora il risultato
-		while (machineNumber == index) {
-			int numberOfMachines = allMachines.size();
-			machineNumber = (int) (Math.random() * numberOfMachines);
-		}
+		// Calcolo randomicamente la macchina con cui fare il transfert.
+		// accetto anche la stessa macchina su cui sto prelevando
+		int numberOfMachines = allMachines.size();
+		machineNumber = (int) (Math.random() * numberOfMachines);
 
 		// TODO: spostarlo nella chiamata principale
 		// range = 0 è come dire range = nmax
