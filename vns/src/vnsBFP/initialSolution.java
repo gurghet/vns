@@ -14,16 +14,16 @@ public class initialSolution
 	
 	public static String typeOfSolution; //Mi salvo il tipo di soluzione fra ATC, ATCR e ATCRS
 	
-	public static int numberOfJob; //ci salvo il numero di Job che conterr� il file
+	public static int numberOfJob; //ci salvo il numero di Job che conterrà il file
 	public static int numberOfMachines; //numero di macchine
 	
 	
-	public static String dataPath = null;
-	public static String setupPath = null;
-	public static String releasePath = null;
-	public static String constraintsPath = null;
+	public static String dataPath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\JobData\\wt300_050.dat";
+	public static String setupPath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\SetupData\\st300_050.dat";
+	public static String releasePath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\ReleaseData\\rt300_04_050.dat"
+	public static String constraintsPath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\ConstraintsData\\ct300_050.dat"
 	
-	public static ArrayList<Job> jobList = null; //Inizializzo l'arraylist che conterr� la lista di tutti i job
+	public static ArrayList<Job> jobList = null; //Inizializzo l'arraylist che conterrà la lista di tutti i job
 	public static ArrayList<Job> jobList2 = null;
 	public static int tMachine[]; //vettore dove salvo il t attuale di ogni macchina per calcolare ATCRS
 	
@@ -38,12 +38,12 @@ public class initialSolution
 	
 	public static float pMedio = 0; //processing time medio per il calcolo di ATCSR
 	
-	public static int indexMachine; // L'indice della macchina dove scheduler� il Job
-	public static int tMin; // t minimo della macchina sul quale scheduler� il prossimo Job
+	public static int indexMachine; // L'indice della macchina dove schedulerò il Job
+	public static int tMin; // t minimo della macchina sul quale schedulerò il prossimo Job
 	
-	public static int indexJob; //L'indice del Job che sheduler� per prossimo
+	public static int indexJob; //L'indice del Job che shedulerò per prossimo
 	
-	public static StorageVNS s; //Struttura che contiene i dati
+	public static StorageVNS soluzioneIniziale; //Struttura che contiene i dati
 	
 	public static Job lastJob = null; //Ultimo job schedulato sulla macchina scelta
 	
@@ -52,8 +52,8 @@ public class initialSolution
 	public static double[] vectorOfIndexPriority;
 	public static int indexOfJob;
 	
-	public static long gap;
-	public static long gapMin;
+	public static int gap;
+	public static int gapMin;
 	
 	
 	
@@ -73,9 +73,9 @@ public class initialSolution
 		getReleaseData(); //Recupero i dati delle Release
 		getConstraintsData(); //Recupero i vincoli di precedenza
 		
-		s = new StorageVNS(numberOfMachines); //Struttura dati che contiene lo schedule
+		soluzioneIniziale = new StorageVNS(numberOfMachines); //Struttura dati che contiene lo schedule
 		
-		//Finch� non esaurisco la lista di job da schedulare
+		//Finchè non esaurisco la lista di job da schedulare
 		while( jobList.size() > 0)
 		{ 
 			
@@ -83,7 +83,7 @@ public class initialSolution
 			//seleziono la macchina su cui schedulare e il T di quella macchina
 			selectMachine();
 			
-			//calcolo l'indice di priorit� scelto per i Job ancora da schedulare e salvo la posizione in jobList e il valore
+			//calcolo l'indice di priorità scelto per i Job ancora da schedulare e salvo la posizione in jobList e il valore
 			if(typeOfSolution == "ATC")
 			{
 				
@@ -104,7 +104,7 @@ public class initialSolution
 			}
 			
 
-			//Scelgo il job a seconda di indice di priorit� e che rispetti i vincoli di precedenza
+			//Scelgo il job a seconda di indice di priorità e che rispetti i vincoli di precedenza
 			selectJob();
 			
 			
@@ -112,51 +112,67 @@ public class initialSolution
 			if(lastJob != null)
 			{
 				indexOfJob = jobList.get(indexJob).getIndexOfJob();
-				jobList.get(indexJob).setStartingTime( Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()), jobList.get(indexJob).getReleaseTime()) + gapMin );
+				jobList.get(indexJob).setStartingTime( (Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()), jobList.get(indexJob).getReleaseTime())) + gapMin );
 				jobList.get(indexJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 				tMachine[indexMachine] = (int)jobList.get(indexJob).getEndingTime();
-				jobList2.get(indexOfJob).setStartingTime( Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()), jobList.get(indexJob).getReleaseTime()) +gapMin );
+				jobList2.get(indexOfJob).setStartingTime( (Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()), jobList.get(indexJob).getReleaseTime())) +gapMin );
 				jobList2.get(indexOfJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 			}
 			else
 			{
 				indexOfJob = jobList.get(indexJob).getIndexOfJob();
-				jobList.get(indexJob).setStartingTime(Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime()) + gapMin);
+				jobList.get(indexJob).setStartingTime((Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime())) + gapMin);
 				jobList.get(indexJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 				tMachine[indexMachine] = (int)jobList.get(indexJob).getEndingTime();
-				jobList2.get(indexOfJob).setStartingTime(Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime()) + gapMin);
+				jobList2.get(indexOfJob).setStartingTime((Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime())) + gapMin);
 				jobList2.get(indexOfJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 			}
 			
-			//Aggiorno su che macchina � e la posizione sulla macchina
+			//Aggiorno su che macchina è e la posizione sulla macchina
 			jobList.get(indexJob).setMachine(indexMachine);
-			jobList.get(indexJob).setNumberOnMachine(s.getMachine(indexMachine).size());
+			jobList.get(indexJob).setNumberOnMachine(soluzioneIniziale.getMachine(indexMachine).size());
 			jobList2.get(indexOfJob).setMachine(indexMachine);
-			jobList2.get(indexOfJob).setNumberOnMachine(s.getMachine(indexMachine).size());
+			jobList2.get(indexOfJob).setNumberOnMachine(soluzioneIniziale.getMachine(indexMachine).size());
 			
 			
 			//Aggiungo il scelto nella struttura di schedule
-			s.addJobOnMachine(indexMachine, jobList.get(indexJob));
+			soluzioneIniziale.addJobOnMachine(indexMachine, jobList.get(indexJob));
 			
 			//Rimuovo il job schedulato dalla lista di quelli ancora schedulabili
 			jobList.remove(indexJob);
 			
 		}
 		
+		SetConstrains();
+		
+		//DEBUG stampa dei vincoli di precedenza indiretti
+		/*
+		for(int x = 0; x < s.getAllMachines().size(); x++)
+			{
+				
+				ArrayList<Job> alj = s.getAllMachines().get(x);
+				
+				for(int y = 0; y < alj.size(); y++)
+				{
+					System.out.println(alj.get(y).getName() + " " + alj.get(y).getPreviousJob() + " " + alj.get(y).getNextJob());
+				}
+				
+				
+			}
+		*/
 		
 		//DEBUG stampa della stuttura di schedule
 		///*
-		s.printResult();
 		for(int i = 0; i < numberOfMachines; i++)
 		{
 			
 			System.out.println(tMachine[i]);
 			
 		}
-		System.out.println(s.calculateTwt());
+		System.out.println(soluzioneIniziale.calculateTwt());
 		//*/
 		
-		return s;
+		return soluzioneIniziale;
 				
 	}
 	
@@ -169,8 +185,7 @@ public class initialSolution
 		int executionTime;
 		int dueDate;
 		int weight;
-		int releaseTime = 0; //release time ora settata a 0
-		String name;
+		int releaseTime = 0;
 		
 		StringTokenizer tok = null; //Inizializzo il tokenizer per leggere il file
 		StringTokenizer tok2 = null; // Per leggere la riga
@@ -201,13 +216,12 @@ public class initialSolution
             	riga = buffer.readLine();
             	tok2 = new StringTokenizer(riga);//faccio partire il tokenizer
         		
-            	name = "J"+i;
             	executionTime = Integer.parseInt(tok2.nextToken());
             	dueDate = (int)(Integer.parseInt(tok2.nextToken()) / numberOfMachines);
             	weight = Integer.parseInt(tok2.nextToken());
             	
-            	jobList.add(new Job(name, releaseTime, executionTime, dueDate, weight, numberOfJob, i));
-            	jobList2.add(new Job(name, releaseTime, executionTime, dueDate, weight, numberOfJob, i));
+            	jobList.add(new Job(releaseTime, executionTime, dueDate, weight, numberOfJob, i));
+            	jobList2.add(new Job(releaseTime, executionTime, dueDate, weight, numberOfJob, i));
             	//System.out.println("Job = " + name + " " + executionTime + " " + dueDate + " " + weight);
             }
             
@@ -319,8 +333,8 @@ public class initialSolution
 	{
 		
 		
-		int firstJob;
-		int secondJob;
+		Job firstJob;
+		Job secondJob;
 		
 		StringTokenizer tok = null; // Per leggere la riga
 		String  percorso = new String(); //stringa nella quale salvo il pecorso del file passato dall'utente
@@ -339,29 +353,30 @@ public class initialSolution
 			BufferedReader buffer = new BufferedReader(new InputStreamReader(in)); //Ho aperto il file specificato dal percorso
             
             
-            for(int i = 0; i < 90; i++)
+            for(int i = 0; i < 100; i++)
             {
             	
             	riga = buffer.readLine();
-            	tok = new StringTokenizer(riga);//faccio partire il tokenizer
-        		
-            		
-        		firstJob = Integer.parseInt(tok.nextToken());
-        		secondJob = Integer.parseInt(tok.nextToken());
-
-        		//System.out.println(firstJob + " " + secondJob);
-        		jobList.get(firstJob).setJobSuccessivi(secondJob);
-        		jobList.get(firstJob).setNextJob(jobList.get(secondJob).getName());
-        		jobList.get(secondJob).setJobPrecedenti(firstJob);
-        		jobList.get(secondJob).setPreviousJob(jobList.get(firstJob).getName());
-        		
-        		jobList2.get(firstJob).setJobSuccessivi(secondJob);
-        		jobList2.get(firstJob).setNextJob(jobList.get(secondJob).getName());
-        		jobList2.get(secondJob).setJobPrecedenti(firstJob);
-        		jobList2.get(secondJob).setPreviousJob(jobList.get(firstJob).getName());
+            	if(riga != null)
+            	{
+	            	tok = new StringTokenizer(riga);//faccio partire il tokenizer
+	        		
+	            		
+	        		firstJob = Job.getJobByID(Integer.parseInt(tok.nextToken()));
+	        		secondJob = Job.getJobByID(Integer.parseInt(tok.nextToken()));
+	
+	        		//System.out.println(firstJob + " " + secondJob);
+	        		firstJob.addSuccessor(secondJob);
+	        		secondJob.addPredecessor(firstJob);
+	        		
+	        		firstJob.addSuccessor(secondJob);
+	        		secondJob.addPredecessor(firstJob);
+            	}
 
         		//System.out.println(jobList.get(i).getRelaseTime());
             }
+            
+            ExtendConstrains();
             
 		}catch (Exception e){System.err.println("Errore: " + e.getMessage());}
 		
@@ -378,11 +393,11 @@ public class initialSolution
 		
 		vectorOfIndexPriority = new double[jobList.size()];
 		
-		//Prendo l'ultimo job schedulato sulla macchina (Se c'�)
-		if(s.getMachine(indexMachine).size() != 0)
+		//Prendo l'ultimo job schedulato sulla macchina (Se c'è)
+		if(soluzioneIniziale.getMachine(indexMachine).size() != 0)
 		{
 			
-			lastJob = s.getMachine(indexMachine).get((s.getMachine(indexMachine).size() - 1));
+			lastJob = soluzioneIniziale.getMachine(indexMachine).get((soluzioneIniziale.getMachine(indexMachine).size() - 1));
 		
 		}
 		
@@ -427,11 +442,11 @@ public class initialSolution
 		vectorOfIndexPriority = new double[jobList.size()];
 
 		
-		//Prendo l'ultimo job schedulato sulla macchina (Se c'�)
-		if(s.getMachine(indexMachine).size() != 0)
+		//Prendo l'ultimo job schedulato sulla macchina (Se c'è)
+		if(soluzioneIniziale.getMachine(indexMachine).size() != 0)
 		{
 			
-			lastJob = s.getMachine(indexMachine).get((s.getMachine(indexMachine).size() - 1));
+			lastJob = soluzioneIniziale.getMachine(indexMachine).get((soluzioneIniziale.getMachine(indexMachine).size() - 1));
 		
 		}
 		
@@ -449,7 +464,7 @@ public class initialSolution
 			//System.out.println(firstTerm);
 			
 			//Calcolo del secondo termine
-			if(s.getMachine(indexMachine).size() == 0)
+			if(soluzioneIniziale.getMachine(indexMachine).size() == 0)
 			{
 				
 				numeratoreSecondTerm = 0; //E' il primo e quindi non lo precede nessuno e non ha tempo di setup
@@ -498,11 +513,11 @@ public class initialSolution
 		vectorOfIndexPriority = new double[jobList.size()];
 
 		
-		//Prendo l'ultimo job schedulato sulla macchina (Se c'�)
-		if(s.getMachine(indexMachine).size() != 0)
+		//Prendo l'ultimo job schedulato sulla macchina (Se c'è)
+		if(soluzioneIniziale.getMachine(indexMachine).size() != 0)
 		{
 			
-			lastJob = s.getMachine(indexMachine).get((s.getMachine(indexMachine).size() - 1));
+			lastJob = soluzioneIniziale.getMachine(indexMachine).get((soluzioneIniziale.getMachine(indexMachine).size() - 1));
 		
 		}
 		
@@ -514,14 +529,14 @@ public class initialSolution
 			calculatePMedio();			
 			
 			//Calcolo del primo termine
-			firstTermFirstMax = Math.max(jobList.get(i).getReleaseTime(), tMin);
-			firstTermSecondMax = Math.max(jobList.get(i).getDueDate() - jobList.get(i).getExecutionTime() - firstTermFirstMax, 0);
+			firstTermFirstMax = Math.max((float)jobList.get(i).getReleaseTime(), (float)tMin);
+			firstTermSecondMax = Math.max((float)jobList.get(i).getDueDate() - (float)jobList.get(i).getExecutionTime() - firstTermFirstMax, 0);
 			firstTerm = -(firstTermSecondMax/(k1 * pMedio));
 			//System.out.println(firstTerm);
 			
 			
 			//Calcolo del secondo termine
-			if(s.getMachine(indexMachine).size() == 0)
+			if(soluzioneIniziale.getMachine(indexMachine).size() == 0)
 			{
 				
 				numeratoreSecondTerm = 0; //E' il primo e quindi non lo precede nessuno e non ha tempo di setup
@@ -628,8 +643,8 @@ public class initialSolution
 			
 			tMin = tMinTemp;
 			
-			//Genero un numero casuale tra 0 e size di machineWhitEqualTMin che sar� l'indice del vettore
-			x = (int)( Math.random() * (machineWhitEqualTMin.size()-0.01)); // il meno 0.01 � per non far venire l'intero superiore
+			//Genero un numero casuale tra 0 e size di machineWhitEqualTMin che sarà l'indice del vettore
+			x = (int)( Math.random() * (machineWhitEqualTMin.size()-0.01)); // il meno 0.01 è per non far venire l'intero superiore
 			
 			indexMachine = machineWhitEqualTMin.get(x);
 			
@@ -645,15 +660,15 @@ public class initialSolution
 	public static void selectJob()
 	{
 		
-		ArrayList<Integer> precedenti; //job che devon essere schedulati prima di quello scelto
-		int x = jobList.size(); // indice che mi serve per pescare dal vettore di indici di priorit�
-		Arrays.sort(vectorOfIndexPriority); // Ordino il vettore con gli indici di priorit�
-		boolean jobOk = false; // Vedo se il job pu� essere schedulato
+		ArrayList<Job> precedenti; //job che devon essere schedulati prima di quello scelto
+		int x = jobList.size(); // indice che mi serve per pescare dal vettore di indici di priorità
+		Arrays.sort(vectorOfIndexPriority); // Ordino il vettore con gli indici di priorità
+		boolean jobOk = false; // Vedo se il job può essere schedulato
 		int count; //variabile che conta quanti vinoli di precedenza rispettare
-		long start; // tempo di inizio
-		gap = 0; //il job che deve venire prima � in lavorazione quindi devo aspettare che finisca
+		int start; // tempo di inizio
+		gap = 0; //il job che deve venire prima è in lavorazione quindi devo aspettare che finisca
 		
-		//Itero finch� il Job non va bene
+		//Itero finchè il Job non va bene
 		while(jobOk == false)
 		{
 			
@@ -673,7 +688,7 @@ public class initialSolution
 			}
 			
 			// recupero i suoi precedenti
-			precedenti = jobList.get(indexJob).getjobPrecedenti(); 
+			precedenti = jobList.get(indexJob).getPredecessors(); 
 
 			
 			//Se ho precedenti devo vedere se sono stati schedulati
@@ -683,11 +698,11 @@ public class initialSolution
 				//Calcolo il tempo di start del job scelto
 				if(lastJob != null)
 				{
-					start = Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()) , jobList.get(indexJob).getReleaseTime());
+					start = (int)Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()) , jobList.get(indexJob).getReleaseTime());
 				}
 				else
 				{
-					start = Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime());
+					start = (int)Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime());
 				}
 				
 				
@@ -695,24 +710,24 @@ public class initialSolution
 				for(int j = 0;j<precedenti.size(); j++)
 				{
 					
-					//Se il precedente non � ancora stato schedulato scelgo un altro job
-					if(jobList2.get(precedenti.get(j)).getEndingTime() == 0)
+					//Se il precedente non è ancora stato schedulato scelgo un altro job
+					if(precedenti.get(j).getEndingTime() == 0)
 					{
 						break;
 					}
-					//se � stato schedulato invece
+					//se è stato schedulato invece
 					else
 					{
 								
 						//Controllo che il job scelto parta dopo la sua fine. Se si aumento count
-						if(start >= jobList2.get(precedenti.get(j)).getEndingTime())
+						if(start >= precedenti.get(j).getEndingTime())
 						{									
 							count++;
 						}
 						//Se no mi salvo un gap che devo aggiungere allo start time per evitare che parta prima del job in esecuzione
 						else
 						{
-							gap = jobList2.get(precedenti.get(j)).getEndingTime() - start;
+							gap = (int)precedenti.get(j).getEndingTime() - start;
 							if(gap > gapMin)
 							{
 								gapMin = gap;								
@@ -724,7 +739,7 @@ public class initialSolution
 				}
 			
 				
-				//Se tutti i job che dovevano finire prima finiscono effettivamente prima d� OK a quel job e lo schedulo
+				//Se tutti i job che dovevano finire prima finiscono effettivamente prima dò OK a quel job e lo schedulo
 				if (count == precedenti.size())
 				{
 					
@@ -793,5 +808,109 @@ public class initialSolution
 		
 	}
 	
-
+	
+	public static void SetConstrains()
+	{
+		
+		
+		for(int x = 0; x < soluzioneIniziale.getAllMachines().size(); x++)
+		{
+				
+			ArrayList<Job> alj = soluzioneIniziale.getAllMachines().get(x);
+		
+			
+			for(int y = 0; y < alj.size(); y++)
+			{
+				
+				
+				if(alj.get(y).getPredecessors() != null )
+				{
+					for(int z = 0; z<alj.get(y).getPredecessors().size(); z++)
+					{
+						alj.get(y).addPreviousJob(alj.get(y).getPredecessors().get(z));
+					}
+				}
+				
+				if(alj.get(y).getSuccessors() != null )
+				{
+					for(int z = 0; z<alj.get(y).getSuccessors().size(); z++)
+					{
+						alj.get(y).addNextJob(alj.get(y).getSuccessors().get(z));
+					}
+				}
+				
+			}
+				
+		}
+	
+	}
+	
+	
+	public static void ExtendConstrains()
+	{
+		
+		
+		for(int i = 0; i<jobList.size(); i++)
+		{
+			
+			//Precedenze
+			if(jobList.get(i).getPredecessors() != null)
+			{
+				
+				for(int y = 0; y<jobList.get(i).getPredecessors().size();y++)
+				{
+					
+					if(jobList.get(i).getPredecessors().get(y).getPredecessors() != null)
+					{
+						
+						for(int x = 0;x<jobList.get(i).getPredecessors().get(y).getPredecessors().size();x++)
+						{
+							
+							if(!jobList.get(i).getPredecessors().contains(jobList.get(i).getPredecessors().get(y).getPredecessors().get(x)))
+							{
+								jobList.get(i).addPredecessor(jobList.get(i).getPredecessors().get(y).getPredecessors().get(x));
+								jobList2.get(i).addPredecessor(jobList.get(i).getPredecessors().get(y).getPredecessors().get(x));
+							}
+							
+						}
+						
+					}
+					
+				}
+					
+			}
+			
+			
+			//Successivi
+			if(jobList.get(i).getSuccessors() != null)
+			{
+				
+				for(int y = 0; y<jobList.get(i).getSuccessors().size();y++)
+				{
+					
+					if(jobList.get(i).getSuccessors().get(y).getSuccessors() != null)
+					{
+						
+						for(int x = 0;x<jobList.get(i).getSuccessors().get(y).getSuccessors().size();x++)
+						{
+							
+							if (!jobList.get(i).getSuccessors().contains(jobList.get(i).getSuccessors().get(y).getSuccessors().get(x)))
+							{
+								jobList.get(i).addSuccessor(jobList.get(i).getSuccessors().get(y).getSuccessors().get(x));
+								jobList2.get(i).addSuccessor(jobList.get(i).getSuccessors().get(y).getSuccessors().get(x));
+							}
+							
+						}
+						
+					}
+					
+				}
+					
+			}
+			
+		}
+		
+	}
+	
+	
 }

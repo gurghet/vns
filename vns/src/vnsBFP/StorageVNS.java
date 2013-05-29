@@ -9,446 +9,410 @@ import java.util.ListIterator;
 public class StorageVNS {
 	// ArrayList che memorizza tutti i job divisi per macchine.
 	private ArrayList<ArrayList<Job>> allMachines = null;
-    
+
 	// Matrice dei setup.
 	private int[][] setupMatrix = null;
-    
-	// HashMap che memorizza dove sono schedulati i job.
-	private HashMap<String, Integer> jobMap = null;
-	
+
+	// HashMap che memorizza in quale macchina sono schedulati i job.
+	private HashMap<Job, Integer> jobMap = null;
+
 	// TWT attuale.
 	private long twt;
-	
+
 	private int nMachines = 0;
-    
-	public StorageVNS(int nMachines)
-	{
+
+	// strutture per calculatetwt
+	HashMap<Job, Long> scheduledJobs;
+	ListIterator<Job>[] jobIterator;
+
+	@SuppressWarnings("unchecked")
+	public StorageVNS(int nMachines) {
 		allMachines = new ArrayList<ArrayList<Job>>();
-		jobMap = new HashMap<String,Integer>();
-        
-		for (int x = 0; x < nMachines; x++)
-		{
+		jobMap = new HashMap<Job, Integer>();
+
+		for (int x = 0; x < nMachines; x++) {
 			allMachines.add(new ArrayList<Job>());
 		}
 		this.nMachines = nMachines;
+		jobIterator = (ListIterator<Job>[]) new ListIterator[allMachines.size()];
+		scheduledJobs = new HashMap<Job, Long>();
 	}
-    
+
 	public ArrayList<ArrayList<Job>> getAllMachines() {
 		return allMachines;
 	}
-    
+
 	public long getTwt() {
 		return twt;
 	}
-    
+
 	public int getNumberOfMachines() {
 		return allMachines.size();
 	}
-    
+
 	public int getNumberOfJobsOnMachine(int machineNumber) {
 		return allMachines.get(machineNumber).size();
 	}
-    
+
 	public ArrayList<Job> getMachine(int position) {
 		return allMachines.get(position);
 	}
-    
-	public void setSetupMatrix(int[][] matrixSetup)
-	{
+
+	public void setSetupMatrix(int[][] matrixSetup) {
 		setupMatrix = matrixSetup;
 	}
-    
-	
+
 	// Metodi di inserimento e cancellazione
-	
-	public void addJobOnMachine(int machineNumber, Job j)
-	{
+
+	public void addJobOnMachine(int machineNumber, Job j) {
 		allMachines.get(machineNumber).add(j);
-		jobMap.put(j.getName(), machineNumber);
+		jobMap.put(j, machineNumber);
 	}
-    
-	public void removeJobFromMachine(int position, int machineNumber)
-	{
+
+	public void removeJobFromMachine(int position, int machineNumber) {
 		Job j = allMachines.get(machineNumber).remove(position);
-		jobMap.remove(j.getName());
+		jobMap.remove(j);
 	}
-    
+
 	// Non usato
-	public void removeAllJobsFromMachine(int machineNumber)
-	{
+	public void removeAllJobsFromMachine(int machineNumber) {
 		for (int x = 0; x < allMachines.get(machineNumber).size(); x++) {
 			allMachines.get(machineNumber).remove(x);
 		}
 	}
-    
+
 	// Mosse
-    
+
 	/**
 	 * @param range
 	 *            raggio in cui verranno effettuati gli swap
 	 * @param repeat
-	 *            quante volte verr√† ripetuta questa mossa alla fine sto metodo
-	 *            fa un po‚Äô le cose a casaccio, ma in fondo √® un algoritmo
-	 *            random no?
+	 *            quante volte verr������ ripetuta questa mossa alla fine sto
+	 *            metodo fa un po������� le cose a casaccio, ma in fondo �����
+	 *            un algoritmo random no?
 	 */
 	public boolean swapOnOneMachine(int range, int repeat) {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
-				// range = 0 √® come dire range = nmax
+				// range = 0 ����� come dire range = nmax
 				if (range == 0)
 					range = this.getNumberOfJobsOnMachine(i);
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
-                    || _swapOnOneMachine_onMachine_onPosition(range,
-                                                              allMachines.get(i), j);
+							|| _swapOnOneMachine_onMachine_onPosition(range,
+									allMachines.get(i), j);
 				}
 			}
 		}
-        
+
 		return miglioramentoAvvenuto;
 	}
-    
-	public boolean _swapOnOneMachine_onMachine_onPosition(int range, ArrayList<Job> machine, int position)
-	{
-		System.out.println("eseguo swaponone");
+
+	public boolean _swapOnOneMachine_onMachine_onPosition(int range,
+			ArrayList<Job> machine, int position) {
+		Main.log("eseguo swaponone");
 		Job consideredJob = machine.get(position);
-        /*
-         int leftLimit = calculateLeftLimit(position, range, consideredJob, machine);
-         int rightLimit = calculateRightLimit(position, range, consideredJob, machine);
-         */
-		int leftLimit = 0;
-		int rightLimit = machine.size();
-        
-		// Imposto il limite sinistro del range da considerare
-		if ((position - range) > 0)
-		{
-			leftLimit = position - range;
-		}
-        
-		// Imposto il limite destro del range da considerare
-		if ((position + range) < rightLimit)
-		{
-			rightLimit = position + range;
-		}
-        
-		
+
+		int leftLimitCurrent = calculateLeftLimitFast(machine, position, range);
+		int rightLimitCurrent = calculateRightLimitFast(machine, position,
+				range);
+
 		// Calcolo la posizione con cui fare lo swap
-		int distance = rightLimit - leftLimit;
-		int posInRange = (int) (Math.random() * distance);
-		int newPos = leftLimit + posInRange;
-		
-		long prevTwt = calculateTwt();
-		
+		int distance = rightLimitCurrent - leftLimitCurrent;
+		int posInRange = (int) (Math.random() * distance) + 1;
+		int newPos = leftLimitCurrent + posInRange;
+
 		// Effettuo lo swap
 		Job substitutedJob = machine.get(newPos);
+		/* questo codice va a controllare le precedenze dall’altra parte
+		 * int leftLimitDest = calculateLeftLimit(substitutedJob, machine,
+		 * newPos, machine.size()); int rightLimitDest =
+		 * calculateRightLimit(substitutedJob, machine, newPos, machine.size());
+		 * if (position < leftLimitDest || position > rightLimitDest) {
+		 * Main.log("Swap Non Effettuato"); return false; }
+		 */
+
 		machine.set(position, substitutedJob);
 		machine.set(newPos, consideredJob);
-		
+
 		long newTwt = calculateTwt();
-        
-		//System.out.println(prevTwt+" - "+newTwt);
-		
-		if (newTwt < twt /*&& isMoveValid*/) // manca condizione di validit‡ in base alla priorit‡
-		{
+
+		if (newTwt < twt) {
 			twt = newTwt;
-			System.out.println("Swap Effettuato");
+			Main.log("Swap Effettuato");
 			return true;
-		}
-		else
-		{
+		} else {
 			machine.set(position, consideredJob);
 			machine.set(newPos, substitutedJob);
-			System.out.println("Swap Non Effettuato");
+			Main.log("Swap Non Effettuato");
 			return false;
 		}
 	}
-    
+
 	public boolean transferOnOneMachine(int range, int repeat) {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
-				// range = 0 √® come dire range = nmax
+				// range = 0 è come dire range = nmax
 				if (range == 0)
 					range = this.getNumberOfJobsOnMachine(i);
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
-                    || _transferOnOneMachine_onMachine_onPosition(
-                                                                  range, allMachines.get(i), j);
+							|| _transferOnOneMachine_onMachine_onPosition(
+									range, allMachines.get(i), j);
 				}
 			}
 		}
 		return miglioramentoAvvenuto;
 	}
-    
-	public boolean _transferOnOneMachine_onMachine_onPosition(int range, ArrayList<Job> machine, int position)
-	{
-        int leftLimit = 0;
-		int rightLimit = machine.size() - 1;
-        
-		if ((position - range) > 0)
-		{
-			// IMPOSTARE IL LIMITE AL PRIMO PREDECESSORE SU QUESTA MACCHINA
-			// calculateLeftLimit
-			leftLimit = position - range;
-		}
-        
-		if ((position + range) < rightLimit)
-		{
-			// IMPOSTARE IL LIMITE AL PRIMO SUCCESSORE SU QUESTA MACCHINA
-			// calculateRightLimit
-			rightLimit = position + range;
-		}
-        
-		
+
+	public boolean _transferOnOneMachine_onMachine_onPosition(int range,
+			ArrayList<Job> machine, int position) {
+		Job toBeInsertedJob = machine.remove(position);
+
+		int leftLimit = calculateLeftLimitFast(machine, position, range);
+		int rightLimit = calculateRightLimitFast(machine, position, range);
+
 		// Calcolo la posizione in cui fare il transfert
 		int distance = rightLimit - leftLimit;
-		int posInRange = (int) (Math.random() * distance);
+		int posInRange = (int) (Math.random() * distance) + 1;
 		int newPos = leftLimit + posInRange;
-        
-		// ELIMINARE
-		//if(!verificaTransferOnOne(machine, position, newPos))
-		//	return false;
-		
-		// ELIMINARE
-		//long prevTwt = calculateTwt();
-		
-		Job toBeInsertedJob = machine.remove(position);
+
 		machine.add(newPos, toBeInsertedJob);
-		
-		// ELIMINARE
-		//aggiornaTempi(machine, null);
 
 		long newTwt = calculateTwt();
-		
-		if (newTwt < twt)
-		{
+
+		if (newTwt < twt) {
 			twt = newTwt;
 			Main.log("Transfer Effettuato");
 			return true;
-		}
-		else
-		{
+		} else {
 			// rimetto il job dove stava prima
 			Job toBePutBackJob = machine.remove(newPos);
 			machine.add(position, toBePutBackJob);
-			// eliminare
-			//aggiornaTempi(machine,null);
 			Main.log("Transfer Non Effettuato");
 			return false;
 		}
-        
+
 	}
-	
+
 	public boolean swapAcrossMachines(int range, int repeat) {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
-                    || _swapAcrossMachines_onMachine_onPosition(range,
-                                                                allMachines.get(i), j);
+							|| _swapAcrossMachines_onMachine_onPosition(range,
+									allMachines.get(i), j);
 				}
 			}
 		}
-        
+
 		return miglioramentoAvvenuto;
 	}
-    
-	public boolean _swapAcrossMachines_onMachine_onPosition(int range, ArrayList<Job> sourceMachine, int position)
-	{
-		System.out.println("Eseguo swap across");
+
+	public boolean _swapAcrossMachines_onMachine_onPosition(int range,
+			ArrayList<Job> sourceMachine, int position) {
+		Main.log("Eseguo swap across");
 		Job consideredJob = sourceMachine.get(position);
 		int index = allMachines.indexOf(sourceMachine);
 		int numberOfMachines = allMachines.size();
 		int machineNumber = (int) (Math.random() * numberOfMachines);
-		
-		// Calcolo randomicamente la macchina con cui fare il transfert. non accetto la stessa da cui prendo il job
-		while(machineNumber == index)
-		{
+
+		// Calcolo randomicamente la macchina con cui fare il transfert. non
+		// accetto la stessa da cui prendo il job
+		while (machineNumber == index) {
 			machineNumber = (int) (Math.random() * numberOfMachines);
 		}
-        
-		// range = 0 √® come dire range = nmax
+
+		// range = 0 ����� come dire range = nmax
 		if (range == 0)
 			range = this.getNumberOfJobsOnMachine(machineNumber);
-        
+
 		ArrayList<Job> destMachine = allMachines.get(machineNumber);
-		
-		
-		/*
-         int leftLimit = calculateLeftLimit(position, range, consideredJob, sourceMachine);
-         int rightLimit = calculateRightLimit(position, range, consideredJob, sourceMachine);
-         */
-		
-		
-		int leftLimit = 0;
-		int rightLimit = destMachine.size() - 1;
-        
-		// Imposto il limite sinistro del range da considerare
-		if ((position - range) > 0)
-		{
-			leftLimit = position - range;
-		}
-        
-		// Imposto il limite destro del range da considerare
-		if ((position + range) < rightLimit)
-		{
-			rightLimit = position + range;
-		}
-		
+
+		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
+		int rightLimit = calculateRightLimitFast(destMachine, position, range);
+
 		// Calcolo la osizione con cui fare lo swap all'interno del range
 		int rangeSize = rightLimit - leftLimit;
-		int posInRange = (int) (Math.random() * rangeSize);
+		int posInRange = (int) (Math.random() * rangeSize) + 1;
 		int swapPos = leftLimit + posInRange;
-        
-		// Provo a fare lo swap
-		if (swapPos >= destMachine.size())
-		{
-			// system.out.println("Swap non effettuato perchË la macchina destinazione non ha job nella posizione selezionata");
+
+		Job substitutedJob = destMachine.get(swapPos);
+
+		// Effettuo lo scambio
+		destMachine.set(swapPos, consideredJob);
+		sourceMachine.set(position, substitutedJob);
+
+		long newTwt = calculateTwt();
+
+		if (newTwt < twt) {
+			twt = newTwt;
+			return true;
+		} else {
+			destMachine.set(swapPos, substitutedJob);
+			// TODO aggiornare jobMap
+			sourceMachine.set(position, consideredJob);
 			return false;
 		}
-		else
-		{
-			Job substitutedJob = destMachine.get(swapPos);
-			
-			// Effettuo lo scambio
-			destMachine.set(swapPos, consideredJob);
-			sourceMachine.set(position, substitutedJob);
-            
-			long newTwt = calculateTwt();
-			
-			if (newTwt < twt)
-			{
-				twt = newTwt;
-				return true;
-			}
-			else
-			{
-				destMachine.set(swapPos, substitutedJob);
-				sourceMachine.set(position, consideredJob);
-				return false;
-			}
-		}
 	}
-    
+
 	public boolean transferAcrossMachines(int range, int repeat) {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
-                    || _transferAcrossMachines_onMachine_onPosition(
-                                                                    range, allMachines.get(i), j);
+							|| _transferAcrossMachines_onMachine_onPosition(
+									range, allMachines.get(i), j);
 				}
 			}
 		}
-        
+
 		return miglioramentoAvvenuto;
 	}
-    
-	public boolean _transferAcrossMachines_onMachine_onPosition(int range, ArrayList<Job> sourceMachine, int position)
-	{
-		System.out.println("Eseguo transfer across");
-		
+
+	public boolean _transferAcrossMachines_onMachine_onPosition(int range,
+			ArrayList<Job> sourceMachine, int position) {
+		Main.log("Eseguo transfer across");
+
 		int index = allMachines.indexOf(sourceMachine);
 		int machineNumber = index;
-        
-		// Calcolo randomicamente la macchina con cui fare il transfert. non accetto la stessa macchina su cui sto prelevando
-		while (machineNumber == index)
-		{
+
+		// Calcolo randomicamente la macchina con cui fare il transfert. non
+		// accetto la stessa macchina su cui sto prelevando
+		// TODO: controllare se migliora il risultato
+		while (machineNumber == index) {
 			int numberOfMachines = allMachines.size();
 			machineNumber = (int) (Math.random() * numberOfMachines);
 		}
-        
-		// range = 0 √® come dire range = nmax
+
+		// TODO: spostarlo nella chiamata principale
+		// range = 0 è come dire range = nmax
 		if (range == 0)
 			range = this.getNumberOfJobsOnMachine(machineNumber);
-        
+
 		ArrayList<Job> destMachine = allMachines.get(machineNumber);
-        /*
-         int leftLimit = calculateLeftLimit(position, range, sourceMachine.get(position), sourceMachine);
-         int rightLimit = calculateRightLimit(position, range, sourceMachine.get(position), sourceMachine);
-         */
-        
-		// Calcolo i limiti determinati dal range
-		int rightLimit = position + range;
-		int leftLimit = 0;
-        
-		if ((position - range) > 0)
-		{
-			leftLimit = position - range;
-		}
-        
-		if ((position + range) > (destMachine.size() - 1))
-		{
-			rightLimit = destMachine.size();
-		}
-        
-        
+
+		Job toBeTransferedJob = sourceMachine.remove(position);
+
+		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
+		int rightLimit = calculateRightLimitFast(destMachine, position, range);
+
 		// Calcolo la posizione con cui fare il transfert.
 		int distance = rightLimit - leftLimit;
-		int posInRange = (int) (Math.random() * distance);
+		int posInRange = (int) (Math.random() * distance) + 1;
 		int newPos = leftLimit + posInRange;
-        
-		if (newPos > destMachine.size() - 1)
-			newPos = destMachine.size();
 
-		// trasferisco il job
-		destMachine.add(newPos, sourceMachine.remove(position));
-        
+		destMachine.add(newPos, toBeTransferedJob);
+
 		long newTwt = calculateTwt();
-        
-		//System.out.println(prevTwt+" - "+newTwt);
-		
-		// Se il twt migliora lascio tutto com‚Äô√®, altrimenti rimetto come prima
-		if (newTwt < twt /*&& isMoveValid*/)
-		{
+
+		if (newTwt < twt) {
 			twt = newTwt;
+			jobMap.remove(toBeTransferedJob);
+			jobMap.put(toBeTransferedJob, machineNumber);
 			return true;
-		}
-		else
-		{
+		} else {
 			sourceMachine.add(position, destMachine.remove(newPos));
 			return false;
 		}
 	}
-	
+
+	private int calculateLeftLimit(Job j, ArrayList<Job> destMachine,
+			int position, int range) {
+		int indexOfDestMachine = allMachines.indexOf(destMachine);
+		ArrayList<Job> predecessors = j.getPredecessors();
+		int maxPredecessorIndex = Integer.MIN_VALUE;
+		for (Job predecessor : predecessors) {
+			int machineIndex = jobMap.get(predecessor);
+			if (machineIndex == indexOfDestMachine) {
+				maxPredecessorIndex = Math.max(maxPredecessorIndex,
+						destMachine.indexOf(predecessor));
+			}
+		}
+		int positionOnDestMachine = Math.min(position, destMachine.size() - 1);
+		if ((positionOnDestMachine - range) > -1) {
+			return Math.max(maxPredecessorIndex, positionOnDestMachine - range);
+		} else {
+			return Math.max(maxPredecessorIndex, -1);
+		}
+	}
+
+	private int calculateLeftLimitFast(ArrayList<Job> destMachine,
+			int position, int range) {
+		int positionOnDestMachine = Math.min(position, destMachine.size() - 1);
+		if ((positionOnDestMachine - range) > -1) {
+			return positionOnDestMachine - range;
+		} else {
+			return -1;
+		}
+	}
+
+	private int calculateRightLimit(Job j, ArrayList<Job> destMachine,
+			int position, int range) {
+		int indexOfDestMachine = allMachines.indexOf(destMachine);
+		ArrayList<Job> successors = j.getSuccessors();
+		int minSuccessorIndex = Integer.MAX_VALUE;
+		for (Job successor : successors) {
+			int machineIndex = jobMap.get(successor);
+			if (machineIndex == indexOfDestMachine) {
+				minSuccessorIndex = Math.min(minSuccessorIndex,
+						destMachine.indexOf(successor) + 1);
+			}
+		}
+		if ((position + range) < destMachine.size()) {
+			return Math.min(minSuccessorIndex, position + range) - 1;
+		} else {
+			return Math.min(minSuccessorIndex, destMachine.size()) - 1;
+		}
+	}
+
+	private int calculateRightLimitFast(ArrayList<Job> destMachine,
+			int position, int range) {
+		if ((position + range) < destMachine.size()) {
+			return position + range - 1;
+		} else {
+			return destMachine.size() - 1;
+		}
+	}
+
 	// Funzioni per la realizzazione delle mosse
 
-    
-	public int calculateTwt()
-	{
-		int Twt = 0;
-		HashMap<Job, Long> scheduledJobs = new HashMap<Job, Long>();
-		
-		@SuppressWarnings("unchecked")
-		ListIterator<Job>[] jobIterator = (ListIterator<Job>[]) new ListIterator[allMachines.size()];
+	public int calculateTwt() {
+		int twt = 0;
+
+		scheduledJobs.clear();
 		int currentMachineIndex = 0;
 		Job currentJob = null;
 		Job previousJob = null;
 		long currentTime = 0;
+		int indexOfPreviousJob = -1;
 		int deadlockDetector = 0;
 		long s, r, p;
-		
-		for(int i = 0; i < jobIterator.length ; i++) {
+
+		for (int i = 0; i < jobIterator.length; i++) {
 			jobIterator[i] = allMachines.get(i).listIterator();
 		}
-		
+
 		currentJob = jobIterator[0].next();
 		boolean notFinishedScheduling = true;
-		
-		while(notFinishedScheduling) {
+
+		while (notFinishedScheduling) {
 			// per convenzione a questo punto i currentJob sono schedulati
-			// imposta lo startingTime al tempo di termine dell’ultimo job schedulato
-WHILE:
-			if (!jobIterator[currentMachineIndex].hasPrevious()) {
+			// imposta lo startingTime al tempo di termine dell���ultimo job
+			// schedulato
+			WHILE: if (!jobIterator[currentMachineIndex].hasPrevious()) {
 				currentTime = 0;
 			} else {
-				int indexOfPreviousJob = allMachines.get(currentMachineIndex).indexOf(previousJob);
-				int indexOfCurentJob = allMachines.get(currentMachineIndex).indexOf(previousJob);
-				int currentJobSetupTime = setupMatrix[indexOfPreviousJob][indexOfCurentJob];
-				s = scheduledJobs.get(previousJob) + currentJobSetupTime;
+				int currentJobSetupTime = currentJob
+						.getSetupTimes(indexOfPreviousJob);
+				long timeLastJobFinished = scheduledJobs
+						.containsKey(previousJob) ? scheduledJobs
+						.get(previousJob) : 0;
+				s = timeLastJobFinished + currentJobSetupTime;
 				r = currentJob.getReleaseTime();
 				p = 0;
 				// controlla che non abbia predecessori
@@ -458,9 +422,13 @@ WHILE:
 						if (scheduledJobs.containsKey(predecessor)) {
 							p = Math.max(p, predecessor.getEndingTime());
 						} else {
-							currentMachineIndex = predecessor.getMachine();
-							currentJob = jobIterator[currentMachineIndex].next();
-							previousJob = jobIterator[currentMachineIndex].previous();
+							currentMachineIndex = jobMap.get(predecessor);
+							currentJob = jobIterator[currentMachineIndex]
+									.next();
+							previousJob = jobIterator[currentMachineIndex]
+									.previous();
+							indexOfPreviousJob = allMachines.get(
+									currentMachineIndex).indexOf(previousJob);
 							deadlockDetector++;
 							if (deadlockDetector == allMachines.size()) {
 								return Integer.MAX_VALUE;
@@ -469,134 +437,73 @@ WHILE:
 						}
 					}
 				}
-				
+
 				currentTime = Math.max(Math.max(p, s), r);
-			}			
+			}
 			currentTime += currentJob.getExecutionTime();
 			// aggiorna il tempo di fine dentro il job
 			scheduledJobs.put(currentJob, currentTime);
-			
+			twt += Math.max(
+					scheduledJobs.get(currentJob) - currentJob.getDueDate(), 0)
+					* currentJob.getWeight();
+
 			if (!jobIterator[currentMachineIndex].hasNext()) {
 				notFinishedScheduling = false;
 				for (int i = 0; i < allMachines.size(); i++) {
 					if (jobIterator[i].hasNext()) {
+						// passa al prossimo job su un���altra macchina
 						currentMachineIndex = i;
+						currentJob = jobIterator[currentMachineIndex].next();
+						previousJob = jobIterator[currentMachineIndex]
+								.previous();
+						indexOfPreviousJob = allMachines.get(
+								currentMachineIndex).indexOf(previousJob);
 						notFinishedScheduling = true;
 						break;
-					} 
+					}
 				}
+			} else {
+				// passa al prossimo job sulla stessa macchina
+				previousJob = currentJob;
+				currentJob = jobIterator[currentMachineIndex].next();
+				indexOfPreviousJob++;
 			}
-			
-			// passa al prossimo job sulla macchina
+			// qui almeno una mossa �� stata effettuata senza cambiare macchina
 			deadlockDetector = 0;
-			previousJob = currentJob;
-			currentJob = jobIterator[currentMachineIndex].next();
 		}
-		
-		return Twt;
+		return twt;
 	}
-	
-	public void printResult() {
-		// system.out.println("");
-		// system.out.println("ORDINE DELLE MACCHINE:");
-		for (int x = 0; x < allMachines.size(); x++) {
-			ArrayList<Job> alj = allMachines.get(x);
-			System.out.println("Macchina #"+x);
-			String s = "";
-			for (int y = 0; y < alj.size(); y++) {
-				s = s + alj.get(y).getName() + ", ";
-			}
-            System.out.println(s);
-		}
-		// system.out.println("FINE");
-		// system.out.println("");
-	}
-    
-	public void setInitialTwt()
-	{
+
+	public void setInitialTwt() {
 		twt = calculateTwt();
 	}
-	
 
-	// Metodo temporaneo
-	
-	public boolean effettuaMossaACaso(int k)
-	{
-		Method move = null;
-		int nMossa = (int) (Math.random() * 4);
-		try{
-			if(nMossa == 0)
-			{
-				move = this.getClass().getMethod("transferOnOneMachine", int.class, int.class);
-			}
-			else if(nMossa == 1)
-			{
-				move = this.getClass().getMethod("swapOnOneMachine", int.class, int.class);
-			}
-			else if(nMossa == 2)
-			{
-				move = this.getClass().getMethod("transferAcrossMachines", int.class, int.class);
-			}
-			else
-			{
-				move = this.getClass().getMethod("swapAcrossMachines", int.class, int.class);
-			}
-		}
-		catch (NoSuchMethodException | SecurityException e) {
-			// TODO c‚Äô√® qualcosa che non va se finisce qui
-			Main.log("la riflessivit√† non ha funzionato");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		
-		int range = ((int) (Math.floor(k / 4))) % 4; // ci sono solo 4 possibilita
-		// [2,5,10,n_max]
-		int repeat = (((int) (Math.floor(k / 16))) % 3) + 1; // ci sono solo 3 possibilit√†
-		// [1,2,3]
-		
-		boolean mossaMigliorativa = false;
-		try {
-			mossaMigliorativa = (boolean) move.invoke(this, range, repeat);
-		} catch (IllegalAccessException | IllegalArgumentException
-                 | InvocationTargetException e) {
-			// TODO c‚Äô√® qualcosa che non va se finisce qui
-			Main.log("la riflessivit√† non ha funzionato nemmeno qui");
-			e.printStackTrace();
-			System.exit(1);
-		}
-        
-		return mossaMigliorativa;
-	}
-    
 	/**
 	 * @param k
 	 *            il numero del neighborhood da esplorare
 	 * @return uno <b>StorageVNS</b> con la nuova soluzione
 	 */
 	public boolean muoviCasualmenteNelNeighborhood(int k) {
-		// TODO crea una deep-copy e la muove, meglio sarebbe avere sempre
-		// due soluzioni e avere delle mosse che si possono annullare
-		// in modo da non dover sempre istanziare nuove classi (quindi
-		// ad esempio fare una mossa sulla soluzione 2 e se non porta
-		// a niente di buono annullare solo la mossa e non buttare via
-		// tutta la classe
-        
-		// parametro r √® il range della mossa
+
+		// parametro r ����� il range della mossa
 		int range;
-		// parametro l √® il numero di ripetizioni della mossa
+		// parametro l ����� il numero di ripetizioni della mossa
 		int repeat;
 		// parametro che indica il codice della mossa
 		int moveCode;
 		Method move = null;
-        
-		if (nMachines > 1) moveCode = k % 4; // ci sono solo 4 mosse numerate da 0 a 3
-		else moveCode = k % 2;
-		
+
+		if (nMachines > 1)
+			moveCode = k % 4; // ci sono solo 4 mosse numerate da 0 a 3
+		else
+			moveCode = k % 2;
+
 		range = ((int) (Math.floor(k / 4))) % 4; // ci sono solo 4 possibilita
-        // [2,5,10,n_max]
-		repeat = (((int) (Math.floor(k / 16))) % 3) + 1; // ci sono solo 3 possibilit√†
-        // [1,2,3]
-        
+		// [2,5,10,n_max]
+		repeat = (((int) (Math.floor(k / 16))) % 3) + 1; // ci sono solo 3
+															// possibilit������
+		// [1,2,3]
+
 		if (range == 0)
 			range = 2;
 		if (range == 1)
@@ -605,45 +512,43 @@ WHILE:
 			range = 10;
 		if (range == 3)
 			range = 0; // nella funzione vale come nmax
-        
+
 		try {
 			if (moveCode == 0)
 				move = this.getClass().getMethod("transferOnOneMachine",
-                                                 int.class, int.class);
+						int.class, int.class);
+			else if (moveCode == 1)
+				move = this.getClass().getMethod("swapOnOneMachine", int.class,
+						int.class);
+			else if (moveCode == 2 && nMachines != 1)
+				move = this.getClass().getMethod("transferAcrossMachines",
+						int.class, int.class);
+			else if (moveCode == 3 && nMachines != 1)
+				move = this.getClass().getMethod("swapAcrossMachines",
+						int.class, int.class);
 			else
-                if (moveCode == 1)
-                    move = this.getClass().getMethod("swapOnOneMachine", int.class,
-                                                     int.class);
-                else
-                    if (moveCode == 2 && nMachines != 1)
-                        move = this.getClass().getMethod("transferAcrossMachines",
-                                                         int.class, int.class);
-                    else
-                        if (moveCode == 3 && nMachines != 1)
-                            move = this.getClass().getMethod("swapAcrossMachines",
-                                                             int.class, int.class);
-                        else throw new NoSuchMethodException();
+				throw new NoSuchMethodException();
 		} catch (NoSuchMethodException | SecurityException e) {
-			// TODO c‚Äô√® qualcosa che non va se finisce qui
-			Main.log("la riflessivit√† non ha funzionato");
+			// TODO c������������ qualcosa che non va se finisce qui
+			Main.log("la riflessivit������ non ha funzionato");
 			e.printStackTrace();
 			System.exit(1);
 		}
-        
+
 		boolean mossaMigliorativa = false;
 		try {
 			mossaMigliorativa = (boolean) move.invoke(this, range, repeat);
 		} catch (IllegalAccessException | IllegalArgumentException
-                 | InvocationTargetException e) {
-			// TODO c‚Äô√® qualcosa che non va se finisce qui
-			Main.log("la riflessivit√† non ha funzionato nemmeno qui");
+				| InvocationTargetException e) {
+			// TODO c������������ qualcosa che non va se finisce qui
+			Main.log("la riflessivit������ non ha funzionato nemmeno qui");
 			e.printStackTrace();
 			System.exit(1);
 		}
-        
+
 		return mossaMigliorativa;
 	}
-    
+
 	/**
 	 * stampa delle robe se ci sono lavori uguali o non sono 300
 	 */
@@ -670,60 +575,9 @@ WHILE:
 		if (count != 300)
 			Main.log("i job non sono 300, sono " + count);
 	}
-	
-	public void checkPriority()
-	{
-		for(int x = 0; x < allMachines.size(); x++)
-		{
-			ArrayList<Job> alj = allMachines.get(x);
-			for(int y = 0 ; y < alj.size(); y++)
-			{
-				Job j = alj.get(y);
-				if(alj.get(y).getPreviousJob() != null)
-				{
-					ArrayList<String> prev = alj.get(y).getPreviousJob();
-					for(int k = 0; k < prev.size(); k++)
-					{
-						String name = prev.get(k);
-						int index = jobMap.get(name);
-						for(int h = 0; h < allMachines.get(index).size(); h++)
-						{
-							Job j1 = allMachines.get(index).get(h);
-							if(j1.getName().equals(name))
-							{
-								if(j1.getEndingTime() > j.getStartingTime())
-									System.out.println("Il job "+j1.getName()+", predecessore di "+j.getName()+" finisce al tempo: "+j1.getEndingTime()+". il suo successore inizia al tempo"+j.getStartingTime());
-								break;
-							}
-						}
-					}
-				}
-				
-				if(alj.get(y).getNextJob() != null)
-				{
-					ArrayList<String> succ = alj.get(y).getNextJob();
-					for(int k = 0; k < succ.size(); k++)
-					{
-						String name = succ.get(k);
-						int index = jobMap.get(name);
-						for(int h = 0; h < allMachines.get(index).size(); h++)
-						{
-							Job j1 = allMachines.get(index).get(h);
-							if(j1.getName().equals(name))
-							{
-								if(j1.getStartingTime() < j.getEndingTime())
-									System.out.println("Il job "+j1.getName()+", successore di "+j.getName()+" inizia al tempo: "+j1.getStartingTime()+". il suo predecessore finisce al tempo"+j.getEndingTime());
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-    
+
 	public String toString() {
 		return allMachines.toString() + "\nCosto soluzione finale = "
-        + this.calculateTwt();
+				+ this.calculateTwt();
 	}
 }
