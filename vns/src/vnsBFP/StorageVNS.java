@@ -125,13 +125,6 @@ public class StorageVNS {
 
 		// Effettuo lo swap
 		Job substitutedJob = machine.get(newPos);
-		/* questo codice va a controllare le precedenze dall’altra parte
-		 * int leftLimitDest = calculateLeftLimit(substitutedJob, machine,
-		 * newPos, machine.size()); int rightLimitDest =
-		 * calculateRightLimit(substitutedJob, machine, newPos, machine.size());
-		 * if (position < leftLimitDest || position > rightLimitDest) {
-		 * Main.log("Swap Non Effettuato"); return false; }
-		 */
 
 		machine.set(position, substitutedJob);
 		machine.set(newPos, consideredJob);
@@ -321,26 +314,6 @@ public class StorageVNS {
 		}
 	}
 
-	private int calculateLeftLimit(Job j, ArrayList<Job> destMachine,
-			int position, int range) {
-		int indexOfDestMachine = allMachines.indexOf(destMachine);
-		ArrayList<Job> predecessors = j.getPredecessors();
-		int maxPredecessorIndex = Integer.MIN_VALUE;
-		for (Job predecessor : predecessors) {
-			int machineIndex = jobMap.get(predecessor);
-			if (machineIndex == indexOfDestMachine) {
-				maxPredecessorIndex = Math.max(maxPredecessorIndex,
-						destMachine.indexOf(predecessor));
-			}
-		}
-		int positionOnDestMachine = Math.min(position, destMachine.size() - 1);
-		if ((positionOnDestMachine - range) > -1) {
-			return Math.max(maxPredecessorIndex, positionOnDestMachine - range);
-		} else {
-			return Math.max(maxPredecessorIndex, -1);
-		}
-	}
-
 	private int calculateLeftLimitFast(ArrayList<Job> destMachine,
 			int position, int range) {
 		int positionOnDestMachine = Math.min(position, destMachine.size() - 1);
@@ -348,25 +321,6 @@ public class StorageVNS {
 			return positionOnDestMachine - range;
 		} else {
 			return -1;
-		}
-	}
-
-	private int calculateRightLimit(Job j, ArrayList<Job> destMachine,
-			int position, int range) {
-		int indexOfDestMachine = allMachines.indexOf(destMachine);
-		ArrayList<Job> successors = j.getSuccessors();
-		int minSuccessorIndex = Integer.MAX_VALUE;
-		for (Job successor : successors) {
-			int machineIndex = jobMap.get(successor);
-			if (machineIndex == indexOfDestMachine) {
-				minSuccessorIndex = Math.min(minSuccessorIndex,
-						destMachine.indexOf(successor) + 1);
-			}
-		}
-		if ((position + range) < destMachine.size()) {
-			return Math.min(minSuccessorIndex, position + range) - 1;
-		} else {
-			return Math.min(minSuccessorIndex, destMachine.size()) - 1;
 		}
 	}
 
