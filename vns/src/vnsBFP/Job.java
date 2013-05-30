@@ -16,10 +16,10 @@ public class Job
 	// Elementi che rendono semplice il calcolo delle precedenze
 	private long startingTime;
 	private long endingTime;
-	private ArrayList<Job> previousJob = new ArrayList<Job>();
-	private ArrayList<Job> nextJob = new ArrayList<Job>();
-	private ArrayList<Job> jobPrecedenti = new ArrayList<Job>();
-	private ArrayList<Job> jobSuccessivi = new ArrayList<Job>();
+	private ArrayList<Job> immediatelyPreviousJobs = new ArrayList<Job>();
+	private ArrayList<Job> immediatelyNextJobs = new ArrayList<Job>();
+	private ArrayList<Job> predecessors = new ArrayList<Job>();
+	private ArrayList<Job> successors = new ArrayList<Job>();
 	private int machine;
 	private int numberOnMachine;
 	
@@ -73,14 +73,14 @@ public class Job
 		return weight;
 	}
 	
-	public ArrayList<Job> getPreviousJob()
+	public ArrayList<Job> getAllIndirectPredecessors()
 	{
-		return previousJob;
+		return predecessors;
 	}
 
-	public ArrayList<Job> getNextJob()
+	public ArrayList<Job> getAllIndirectSuccessors()
 	{
-		return nextJob;
+		return successors;
 	}
 	
 	public long getStartingTime()
@@ -109,19 +109,19 @@ public class Job
 		return setupMedio;
 	}
 	
-	public int getIndexOfJob()
+	public int getJobID()
 	{
 		return jobID;
 	}
 	
-	public ArrayList<Job> getPredecessors()
+	public ArrayList<Job> getImmediatelyPreviousJobs()
 	{
-		return jobPrecedenti;
+		return immediatelyPreviousJobs;
 	}
 	
-	public ArrayList<Job> getSuccessors()
+	public ArrayList<Job> getImmediatelyNextJobs()
 	{
-		return jobSuccessivi;
+		return immediatelyNextJobs;
 	}
 	
 	public int getMachine()
@@ -133,7 +133,6 @@ public class Job
 	{
 		return numberOnMachine;
 	}
-	
 	
 	public void setDueDate(long time)
 	{
@@ -155,24 +154,24 @@ public class Job
 		weight = w;
 	}
 	
-	public void addPreviousJob(Job prev)
+	public void addImmediatelyPreviousJobs(Job prev)
 	{
-		previousJob.add(prev);
+		immediatelyPreviousJobs.add(prev);
 	}
 	
-	public void addNextJob(Job next)
+	public void addImmediatelyNextJobs(Job next)
 	{
-		nextJob.add(next);
+		immediatelyNextJobs.add(next);
 	}
 	
 	public void addPredecessor(Job prec)
 	{
-		jobPrecedenti.add(prec);
+		predecessors.add(prec);
 	}
 	
 	public void addSuccessor(Job next)
 	{
-		jobSuccessivi.add(next);
+		successors.add(next);
 	}
 	
 	public void setMachine(int m)
@@ -210,12 +209,11 @@ public class Job
 		setupMedio = s;
 	}
 	
-	public boolean hasPredecessor() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
 	public String toString() {
 		return String.valueOf(jobID);
+	}
+
+	public boolean hasImmediatePredecessors() {
+		return !immediatelyPreviousJobs.isEmpty();
 	}
 }

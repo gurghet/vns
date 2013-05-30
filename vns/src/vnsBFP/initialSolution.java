@@ -24,7 +24,6 @@ public class initialSolution
 	public static String constraintsPath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\ConstraintsData\\ct300_050.dat"
 	
 	public static ArrayList<Job> jobList = null; //Inizializzo l'arraylist che conterrà la lista di tutti i job
-	public static ArrayList<Job> jobList2 = null;
 	public static int tMachine[]; //vettore dove salvo il t attuale di ogni macchina per calcolare ATCRS
 	
 	//possibili valori k1 {0.2, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4, 4.8, 5.2, 5.6, 6.0, 6.4, 6.8, 7.2}
@@ -74,7 +73,7 @@ public class initialSolution
 		getConstraintsData(); //Recupero i vincoli di precedenza
 		
 		soluzioneIniziale = new StorageVNS(numberOfMachines); //Struttura dati che contiene lo schedule
-		
+
 		//Finchè non esaurisco la lista di job da schedulare
 		while( jobList.size() > 0)
 		{ 
@@ -111,28 +110,22 @@ public class initialSolution
 			//Aggiorno il T della macchina per sapere a che punto sono arrivato su ogni macchina e salvo lo starting e ending time
 			if(lastJob != null)
 			{
-				indexOfJob = jobList.get(indexJob).getIndexOfJob();
-				jobList.get(indexJob).setStartingTime( (Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()), jobList.get(indexJob).getReleaseTime())) + gapMin );
+				indexOfJob = jobList.get(indexJob).getJobID();
+				jobList.get(indexJob).setStartingTime( (Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getJobID()), jobList.get(indexJob).getReleaseTime())) + gapMin );
 				jobList.get(indexJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 				tMachine[indexMachine] = (int)jobList.get(indexJob).getEndingTime();
-				jobList2.get(indexOfJob).setStartingTime( (Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()), jobList.get(indexJob).getReleaseTime())) +gapMin );
-				jobList2.get(indexOfJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 			}
 			else
 			{
-				indexOfJob = jobList.get(indexJob).getIndexOfJob();
+				indexOfJob = jobList.get(indexJob).getJobID();
 				jobList.get(indexJob).setStartingTime((Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime())) + gapMin);
 				jobList.get(indexJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 				tMachine[indexMachine] = (int)jobList.get(indexJob).getEndingTime();
-				jobList2.get(indexOfJob).setStartingTime((Math.max(tMachine[indexMachine], jobList.get(indexJob).getReleaseTime())) + gapMin);
-				jobList2.get(indexOfJob).setEndingTime(jobList.get(indexJob).getStartingTime() + jobList.get(indexJob).getExecutionTime());
 			}
 			
 			//Aggiorno su che macchina è e la posizione sulla macchina
 			jobList.get(indexJob).setMachine(indexMachine);
 			jobList.get(indexJob).setNumberOnMachine(soluzioneIniziale.getMachine(indexMachine).size());
-			jobList2.get(indexOfJob).setMachine(indexMachine);
-			jobList2.get(indexOfJob).setNumberOnMachine(soluzioneIniziale.getMachine(indexMachine).size());
 			
 			
 			//Aggiungo il scelto nella struttura di schedule
@@ -142,36 +135,7 @@ public class initialSolution
 			jobList.remove(indexJob);
 			
 		}
-		
-		SetConstrains();
-		
-		//DEBUG stampa dei vincoli di precedenza indiretti
-		/*
-		for(int x = 0; x < s.getAllMachines().size(); x++)
-			{
-				
-				ArrayList<Job> alj = s.getAllMachines().get(x);
-				
-				for(int y = 0; y < alj.size(); y++)
-				{
-					System.out.println(alj.get(y).getName() + " " + alj.get(y).getPreviousJob() + " " + alj.get(y).getNextJob());
-				}
-				
-				
-			}
-		*/
-		
-		//DEBUG stampa della stuttura di schedule
-		///*
-		for(int i = 0; i < numberOfMachines; i++)
-		{
-			
-			System.out.println(tMachine[i]);
-			
-		}
-		System.out.println(soluzioneIniziale.calculateTwt());
-		//*/
-		
+
 		return soluzioneIniziale;
 				
 	}
@@ -209,7 +173,6 @@ public class initialSolution
             numberOfJob = Integer.parseInt(tok.nextToken());
             //System.out.println("Numero di Job = " + numberOfJob);
             jobList = new ArrayList<Job>(numberOfJob);
-            jobList2 = new ArrayList<Job>(numberOfJob);
             
             for(int i = 0; i < numberOfJob; i++)
             {
@@ -221,7 +184,6 @@ public class initialSolution
             	weight = Integer.parseInt(tok2.nextToken());
             	
             	jobList.add(new Job(releaseTime, executionTime, dueDate, weight, numberOfJob, i));
-            	jobList2.add(new Job(releaseTime, executionTime, dueDate, weight, numberOfJob, i));
             	//System.out.println("Job = " + name + " " + executionTime + " " + dueDate + " " + weight);
             }
             
@@ -264,7 +226,6 @@ public class initialSolution
             		
             		setupValue = Integer.parseInt(tok.nextToken());
             		jobList.get(i).setSetupTimes(j, setupValue);
-            		jobList2.get(i).setSetupTimes(j, setupValue);
             		matrixOfSetup[i][j] = setupValue;
             		
             		if(setupValue >= 0)
@@ -277,7 +238,6 @@ public class initialSolution
             	}
             	
             	jobList.get(i).setSetupMedio((float)setupTotale / (numberOfJob - 1));
-            	jobList2.get(i).setSetupMedio((float)setupTotale / (numberOfJob - 1));
             	
             }
             
@@ -319,7 +279,6 @@ public class initialSolution
             		
         		releaseTime = Integer.parseInt(tok.nextToken());
         		jobList.get(i).setRelaseTime(releaseTime);
-        		jobList2.get(i).setRelaseTime(releaseTime);
         		
         		//System.out.println(jobList.get(i).getRelaseTime());
             }
@@ -365,12 +324,9 @@ public class initialSolution
 	        		firstJob = Job.getJobByID(Integer.parseInt(tok.nextToken()));
 	        		secondJob = Job.getJobByID(Integer.parseInt(tok.nextToken()));
 	
-	        		//System.out.println(firstJob + " " + secondJob);
-	        		firstJob.addSuccessor(secondJob);
-	        		secondJob.addPredecessor(firstJob);
-	        		
-	        		firstJob.addSuccessor(secondJob);
-	        		secondJob.addPredecessor(firstJob);
+	        		Main.log("Adding the precedence constraint: " +firstJob + "->" + secondJob);
+	        		firstJob.addImmediatelyNextJobs(secondJob);
+	        		secondJob.addImmediatelyPreviousJobs(firstJob);
             	}
 
         		//System.out.println(jobList.get(i).getRelaseTime());
@@ -418,7 +374,6 @@ public class initialSolution
 			//System.out.println(ATC);
 			
 			jobList.get(i).setPriorityIndex(ATC);
-			jobList2.get(i).setPriorityIndex(ATC);
 			vectorOfIndexPriority[i] = ATC;
 			
 			//DEBUG
@@ -474,7 +429,7 @@ public class initialSolution
 			else
 			{
 				
-				numeratoreSecondTerm = lastJob.getSetupTimes(jobList.get(i).getIndexOfJob());
+				numeratoreSecondTerm = lastJob.getSetupTimes(jobList.get(i).getJobID());
 				//System.out.println(numeratoreSecondTerm);
 				
 			}
@@ -487,7 +442,6 @@ public class initialSolution
 			//System.out.println(ATCS);
 			
 			jobList.get(i).setPriorityIndex(ATCS);
-			jobList2.get(i).setPriorityIndex(ATCS);
 			vectorOfIndexPriority[i] = ATCS;
 			
 			//DEBUG
@@ -546,7 +500,7 @@ public class initialSolution
 			else
 			{
 				
-				numeratoreSecondTerm = lastJob.getSetupTimes(jobList.get(i).getIndexOfJob());
+				numeratoreSecondTerm = lastJob.getSetupTimes(jobList.get(i).getJobID());
 				//System.out.println(numeratoreSecondTerm);
 				
 			}
@@ -564,7 +518,6 @@ public class initialSolution
 			//System.out.println(ATCSR);
 			
 			jobList.get(i).setPriorityIndex(ATCSR);
-			jobList2.get(i).setPriorityIndex(ATCSR);
 			vectorOfIndexPriority[i] = ATCSR;
 			
 			//DEBUG
@@ -688,7 +641,7 @@ public class initialSolution
 			}
 			
 			// recupero i suoi precedenti
-			precedenti = jobList.get(indexJob).getPredecessors(); 
+			precedenti = jobList.get(indexJob).getImmediatelyPreviousJobs(); 
 
 			
 			//Se ho precedenti devo vedere se sono stati schedulati
@@ -698,7 +651,7 @@ public class initialSolution
 				//Calcolo il tempo di start del job scelto
 				if(lastJob != null)
 				{
-					start = (int)Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getIndexOfJob()) , jobList.get(indexJob).getReleaseTime());
+					start = (int)Math.max(tMachine[indexMachine] + lastJob.getSetupTimes(jobList.get(indexJob).getJobID()) , jobList.get(indexJob).getReleaseTime());
 				}
 				else
 				{
@@ -801,51 +754,6 @@ public class initialSolution
 	}
 	
 	
-	public static ArrayList<Job> getListOfJob()
-	{
-		
-			return jobList2;		
-		
-	}
-	
-	
-	public static void SetConstrains()
-	{
-		
-		
-		for(int x = 0; x < soluzioneIniziale.getAllMachines().size(); x++)
-		{
-				
-			ArrayList<Job> alj = soluzioneIniziale.getAllMachines().get(x);
-		
-			
-			for(int y = 0; y < alj.size(); y++)
-			{
-				
-				
-				if(alj.get(y).getPredecessors() != null )
-				{
-					for(int z = 0; z<alj.get(y).getPredecessors().size(); z++)
-					{
-						alj.get(y).addPreviousJob(alj.get(y).getPredecessors().get(z));
-					}
-				}
-				
-				if(alj.get(y).getSuccessors() != null )
-				{
-					for(int z = 0; z<alj.get(y).getSuccessors().size(); z++)
-					{
-						alj.get(y).addNextJob(alj.get(y).getSuccessors().get(z));
-					}
-				}
-				
-			}
-				
-		}
-	
-	}
-	
-	
 	public static void ExtendConstrains()
 	{
 		
@@ -854,22 +762,19 @@ public class initialSolution
 		{
 			
 			//Precedenze
-			if(jobList.get(i).getPredecessors() != null)
+			if(jobList.get(i).getImmediatelyPreviousJobs() != null)
 			{
-				
-				for(int y = 0; y<jobList.get(i).getPredecessors().size();y++)
+				for(int y = 0; y<jobList.get(i).getImmediatelyPreviousJobs().size();y++)
 				{
-					
-					if(jobList.get(i).getPredecessors().get(y).getPredecessors() != null)
+					if(jobList.get(i).getImmediatelyPreviousJobs().get(y).getImmediatelyPreviousJobs() != null)
 					{
 						
-						for(int x = 0;x<jobList.get(i).getPredecessors().get(y).getPredecessors().size();x++)
+						for(int x = 0;x<jobList.get(i).getImmediatelyPreviousJobs().get(y).getImmediatelyPreviousJobs().size();x++)
 						{
 							
-							if(!jobList.get(i).getPredecessors().contains(jobList.get(i).getPredecessors().get(y).getPredecessors().get(x)))
+							if(!jobList.get(i).getImmediatelyPreviousJobs().contains(jobList.get(i).getImmediatelyPreviousJobs().get(y).getImmediatelyPreviousJobs().get(x)))
 							{
-								jobList.get(i).addPredecessor(jobList.get(i).getPredecessors().get(y).getPredecessors().get(x));
-								jobList2.get(i).addPredecessor(jobList.get(i).getPredecessors().get(y).getPredecessors().get(x));
+								jobList.get(i).addPredecessor(jobList.get(i).getImmediatelyPreviousJobs().get(y).getImmediatelyPreviousJobs().get(x));
 							}
 							
 						}
@@ -882,22 +787,21 @@ public class initialSolution
 			
 			
 			//Successivi
-			if(jobList.get(i).getSuccessors() != null)
+			if(jobList.get(i).getImmediatelyNextJobs() != null)
 			{
 				
-				for(int y = 0; y<jobList.get(i).getSuccessors().size();y++)
+				for(int y = 0; y<jobList.get(i).getImmediatelyNextJobs().size();y++)
 				{
 					
-					if(jobList.get(i).getSuccessors().get(y).getSuccessors() != null)
+					if(jobList.get(i).getImmediatelyNextJobs().get(y).getImmediatelyNextJobs() != null)
 					{
 						
-						for(int x = 0;x<jobList.get(i).getSuccessors().get(y).getSuccessors().size();x++)
+						for(int x = 0;x<jobList.get(i).getImmediatelyNextJobs().get(y).getImmediatelyNextJobs().size();x++)
 						{
 							
-							if (!jobList.get(i).getSuccessors().contains(jobList.get(i).getSuccessors().get(y).getSuccessors().get(x)))
+							if (!jobList.get(i).getImmediatelyNextJobs().contains(jobList.get(i).getImmediatelyNextJobs().get(y).getImmediatelyNextJobs().get(x)))
 							{
-								jobList.get(i).addSuccessor(jobList.get(i).getSuccessors().get(y).getSuccessors().get(x));
-								jobList2.get(i).addSuccessor(jobList.get(i).getSuccessors().get(y).getSuccessors().get(x));
+								jobList.get(i).addSuccessor(jobList.get(i).getImmediatelyNextJobs().get(y).getImmediatelyNextJobs().get(x));
 							}
 							
 						}

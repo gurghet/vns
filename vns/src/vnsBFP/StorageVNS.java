@@ -4,14 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.ListIterator;
 
 public class StorageVNS {
 	// ArrayList che memorizza tutti i job divisi per macchine.
 	private ArrayList<ArrayList<Job>> allMachines = null;
-
-	// Matrice dei setup.
-	private int[][] setupMatrix = null;
 
 	// HashMap che memorizza in quale macchina sono schedulati i job.
 	private HashMap<Job, Integer> jobMap = null;
@@ -23,7 +21,7 @@ public class StorageVNS {
 
 	// strutture per calculatetwt
 	HashMap<Job, Long> scheduledJobs;
-	ListIterator<Job>[] jobIterator;
+	int[] currentJobIndex;
 
 	@SuppressWarnings("unchecked")
 	public StorageVNS(int nMachines) {
@@ -34,7 +32,7 @@ public class StorageVNS {
 			allMachines.add(new ArrayList<Job>());
 		}
 		this.nMachines = nMachines;
-		jobIterator = (ListIterator<Job>[]) new ListIterator[allMachines.size()];
+		currentJobIndex = new int[nMachines];
 		scheduledJobs = new HashMap<Job, Long>();
 	}
 
@@ -56,10 +54,6 @@ public class StorageVNS {
 
 	public ArrayList<Job> getMachine(int position) {
 		return allMachines.get(position);
-	}
-
-	public void setSetupMatrix(int[][] matrixSetup) {
-		setupMatrix = matrixSetup;
 	}
 
 	// Metodi di inserimento e cancellazione
@@ -95,9 +89,7 @@ public class StorageVNS {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
-				// range = 0 ����� come dire range = nmax
-				if (range == 0)
-					range = this.getNumberOfJobsOnMachine(i);
+				if (range == 0)	range = this.getNumberOfJobsOnMachine(i);
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
 							|| _swapOnOneMachine_onMachine_onPosition(range,
@@ -114,8 +106,8 @@ public class StorageVNS {
 		Main.log("eseguo swaponone");
 		Job consideredJob = machine.get(position);
 
-		int leftLimitCurrent = calculateLeftLimitFast(machine, position, range);
-		int rightLimitCurrent = calculateRightLimitFast(machine, position,
+		int leftLimitCurrent = calculateLeftLimit(consideredJob, machine, position, range);
+		int rightLimitCurrent = calculateRightLimit(consideredJob, machine, position,
 				range);
 
 		// Calcolo la posizione con cui fare lo swap
@@ -125,6 +117,14 @@ public class StorageVNS {
 
 		// Effettuo lo swap
 		Job substitutedJob = machine.get(newPos);
+		
+		/*questo codice va a controllare le precedenze dall’altra parte*/
+		int leftLimitDest = calculateLeftLimit(substitutedJob, machine, newPos, machine.size());
+		int rightLimitDest = calculateRightLimit(substitutedJob, machine, newPos, machine.size());
+		if (position < leftLimitDest || position > rightLimitDest) {
+			Main.logf("Swap Non Effettuato");
+			return false;
+		}
 
 		machine.set(position, substitutedJob);
 		machine.set(newPos, consideredJob);
@@ -147,9 +147,7 @@ public class StorageVNS {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
-				// range = 0 è come dire range = nmax
-				if (range == 0)
-					range = this.getNumberOfJobsOnMachine(i);
+				if (range == 0)	range = this.getNumberOfJobsOnMachine(i);
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
 							|| _transferOnOneMachine_onMachine_onPosition(
@@ -164,8 +162,8 @@ public class StorageVNS {
 			ArrayList<Job> machine, int position) {
 		Job toBeInsertedJob = machine.remove(position);
 
-		int leftLimit = calculateLeftLimitFast(machine, position, range);
-		int rightLimit = calculateRightLimitFast(machine, position, range);
+		int leftLimit = calculateLeftLimit(toBeInsertedJob, machine, position, range);
+		int rightLimit = calculateRightLimit(toBeInsertedJob, machine, position, range);
 
 		// Calcolo la posizione in cui fare il transfert
 		int distance = rightLimit - leftLimit;
@@ -194,6 +192,7 @@ public class StorageVNS {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
+				if (range == 0)	range = this.getNumberOfJobsOnMachine(i);
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
 							|| _swapAcrossMachines_onMachine_onPosition(range,
@@ -219,8 +218,8 @@ public class StorageVNS {
 
 		ArrayList<Job> destMachine = allMachines.get(destMachineNumber);
 
-		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
-		int rightLimit = calculateRightLimitFast(destMachine, position, range);
+		int leftLimit = calculateLeftLimit(consideredJob, destMachine, position, range);
+		int rightLimit = calculateRightLimit(consideredJob, destMachine, position, range);
 
 		// Calcolo la osizione con cui fare lo swap all'interno del range
 		int rangeSize = rightLimit - leftLimit;
@@ -228,6 +227,14 @@ public class StorageVNS {
 		int swapPos = leftLimit + posInRange;
 
 		Job substitutedJob = destMachine.get(swapPos);
+		
+		/*questo codice va a controllare le precedenze dall’altra parte*/
+		int leftLimitDest = calculateLeftLimit(substitutedJob, sourceMachine, position, destMachine.size());
+		int rightLimitDest = calculateRightLimit(substitutedJob, sourceMachine, position, destMachine.size());
+		if (position < leftLimitDest || position > rightLimitDest) {
+			Main.logf("SwapAcross Non Effettuato");
+			return false;
+		}
 
 		// Effettuo lo scambio
 		destMachine.set(swapPos, consideredJob);
@@ -253,6 +260,7 @@ public class StorageVNS {
 		boolean miglioramentoAvvenuto = false;
 		for (int r = 0; r < repeat; r++) {
 			for (int i = 0; i < this.getNumberOfMachines(); i++) {
+				if (range == 0)	range = this.getNumberOfJobsOnMachine(i);
 				for (int j = 0; j < this.getNumberOfJobsOnMachine(i); j++) {
 					miglioramentoAvvenuto = miglioramentoAvvenuto
 							|| _transferAcrossMachines_onMachine_onPosition(
@@ -273,20 +281,14 @@ public class StorageVNS {
 
 		// Calcolo randomicamente la macchina con cui fare il transfert.
 		// accetto anche la stessa macchina su cui sto prelevando
-		int numberOfMachines = allMachines.size();
-		machineNumber = (int) (Math.random() * numberOfMachines);
-
-		// TODO: spostarlo nella chiamata principale
-		// range = 0 è come dire range = nmax
-		if (range == 0)
-			range = this.getNumberOfJobsOnMachine(machineNumber);
+		machineNumber = (int) (Math.random() * allMachines.size());
 
 		ArrayList<Job> destMachine = allMachines.get(machineNumber);
 
 		Job toBeTransferedJob = sourceMachine.remove(position);
 
-		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
-		int rightLimit = calculateRightLimitFast(destMachine, position, range);
+		int leftLimit = calculateLeftLimit(toBeTransferedJob, destMachine, position, range);
+		int rightLimit = calculateRightLimit(toBeTransferedJob, destMachine, position, range);
 
 		// Calcolo la posizione con cui fare il transfert.
 		int distance = rightLimit - leftLimit;
@@ -326,6 +328,45 @@ public class StorageVNS {
 			return destMachine.size() - 1;
 		}
 	}
+	
+	private int calculateLeftLimit(Job j, ArrayList<Job> destMachine,
+			int position, int range) {
+		int indexOfDestMachine = allMachines.indexOf(destMachine);
+		ArrayList<Job> predecessors = j.getAllIndirectPredecessors();
+		int maxPredecessorIndex = Integer.MIN_VALUE;
+		for (Job predecessor : predecessors) {
+			int machineIndex = jobMap.get(predecessor);
+			if (machineIndex == indexOfDestMachine) {
+				maxPredecessorIndex = Math.max(maxPredecessorIndex,
+						destMachine.indexOf(predecessor));
+			}
+		}
+		int positionOnDestMachine = Math.min(position, destMachine.size() - 1);
+		if ((positionOnDestMachine - range) > -1) {
+			return Math.max(maxPredecessorIndex, positionOnDestMachine - range);
+		} else {
+			return Math.max(maxPredecessorIndex, -1);
+		}
+	}
+
+	private int calculateRightLimit(Job j, ArrayList<Job> destMachine,
+			int position, int range) {
+		int indexOfDestMachine = allMachines.indexOf(destMachine);
+		ArrayList<Job> successors = j.getAllIndirectSuccessors();
+		int minSuccessorIndex = Integer.MAX_VALUE;
+		for (Job successor : successors) {
+			int machineIndex = jobMap.get(successor);
+			if (machineIndex == indexOfDestMachine) {
+				minSuccessorIndex = Math.min(minSuccessorIndex,
+						destMachine.indexOf(successor) + 1);
+			}
+		}
+		if ((position + range) < destMachine.size()) {
+			return Math.min(minSuccessorIndex, position + range) - 1;
+		} else {
+			return Math.min(minSuccessorIndex, destMachine.size()) - 1;
+		}
+	}
 
 	// Funzioni per la realizzazione delle mosse
 
@@ -335,53 +376,51 @@ public class StorageVNS {
 		scheduledJobs.clear();
 		int currentMachineIndex = 0;
 		Job currentJob = null;
-		Job previousJob = null;
+		Job lastScheduledJob[] = new Job[nMachines];
 		long currentTime = 0;
-		int indexOfPreviousJob = -1;
 		int deadlockDetector = 0;
 		long s, r, p;
 
-		for (int i = 0; i < jobIterator.length; i++) {
-			jobIterator[i] = allMachines.get(i).listIterator();
+		for (int i = 0; i < currentJobIndex.length; i++) {
+			currentJobIndex[i] = 0;
+			lastScheduledJob[i] = null;
 		}
 
-		currentJob = jobIterator[0].next();
 		boolean notFinishedScheduling = true;
+		
+		
 
-		while (notFinishedScheduling) {
-			// per convenzione a questo punto i currentJob sono schedulati
-			// imposta lo startingTime al tempo di termine dell���ultimo job
-			// schedulato
-			WHILE: if (!jobIterator[currentMachineIndex].hasPrevious()) {
+NEXTMACHINE:
+	while (notFinishedScheduling) {
+		currentJob = getCurrentJobOnMachine(currentJobIndex, currentMachineIndex);
+		if (currentJob.getJobID() == 245) {
+			int i = 4;
+		}
+			if (lastScheduledJob[currentMachineIndex] == null) {
 				currentTime = 0;
 			} else {
 				int currentJobSetupTime = currentJob
-						.getSetupTimes(indexOfPreviousJob);
+						.getSetupTimes(lastScheduledJob[currentMachineIndex].getJobID());
 				long timeLastJobFinished = scheduledJobs
-						.containsKey(previousJob) ? scheduledJobs
-						.get(previousJob) : 0;
+						.containsKey(lastScheduledJob[currentMachineIndex]) ? scheduledJobs
+						.get(lastScheduledJob[currentMachineIndex]) : 0;
 				s = timeLastJobFinished + currentJobSetupTime;
 				r = currentJob.getReleaseTime();
 				p = 0;
 				// controlla che non abbia predecessori
-				if (currentJob.hasPredecessor()) {
-					ArrayList<Job> predecessors = currentJob.getPredecessors();
-					for (Job predecessor : predecessors) {
-						if (scheduledJobs.containsKey(predecessor)) {
-							p = Math.max(p, predecessor.getEndingTime());
+				if (currentJob.hasImmediatePredecessors()) {
+					ArrayList<Job> predecessors = currentJob.getImmediatelyPreviousJobs();
+					for (Job currentPredecessor : predecessors) {
+						if (scheduledJobs.containsKey(currentPredecessor)) {
+							p = Math.max(p, currentPredecessor.getEndingTime());
 						} else {
-							currentMachineIndex = jobMap.get(predecessor);
-							currentJob = jobIterator[currentMachineIndex]
-									.next();
-							previousJob = jobIterator[currentMachineIndex]
-									.previous();
-							indexOfPreviousJob = allMachines.get(
-									currentMachineIndex).indexOf(previousJob);
+							Main.log("il job "+ currentJob +", nella macchina "+ jobMap.get(currentJob) +", ha un predecessore (il "+ currentPredecessor +") non schedulato nella macchina "+ jobMap.get(currentPredecessor) +", attualmente il job corrente è alla posizione "+ allMachines.get(currentMachineIndex).indexOf(currentJob) +" mentre il job non schedulato è nella posizione "+ allMachines.get(jobMap.get(currentPredecessor)).indexOf(currentPredecessor) +".");
+							currentMachineIndex = jobMap.get(currentPredecessor);
 							deadlockDetector++;
 							if (deadlockDetector == allMachines.size()) {
 								return Integer.MAX_VALUE;
 							}
-							break WHILE;
+							continue NEXTMACHINE;
 						}
 					}
 				}
@@ -391,35 +430,43 @@ public class StorageVNS {
 			currentTime += currentJob.getExecutionTime();
 			// aggiorna il tempo di fine dentro il job
 			scheduledJobs.put(currentJob, currentTime);
+			lastScheduledJob[currentMachineIndex] = currentJob;
 			twt += Math.max(
 					scheduledJobs.get(currentJob) - currentJob.getDueDate(), 0)
 					* currentJob.getWeight();
 
-			if (!jobIterator[currentMachineIndex].hasNext()) {
+			if (!hasNextOnMachine(currentJobIndex, currentMachineIndex)) {
 				notFinishedScheduling = false;
 				for (int i = 0; i < allMachines.size(); i++) {
-					if (jobIterator[i].hasNext()) {
+					if (hasNextOnMachine(currentJobIndex, i)) {
 						// passa al prossimo job su un���altra macchina
 						currentMachineIndex = i;
-						currentJob = jobIterator[currentMachineIndex].next();
-						previousJob = jobIterator[currentMachineIndex]
-								.previous();
-						indexOfPreviousJob = allMachines.get(
-								currentMachineIndex).indexOf(previousJob);
+						currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
 						notFinishedScheduling = true;
 						break;
 					}
 				}
 			} else {
 				// passa al prossimo job sulla stessa macchina
-				previousJob = currentJob;
-				currentJob = jobIterator[currentMachineIndex].next();
-				indexOfPreviousJob++;
+				currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
 			}
 			// qui almeno una mossa �� stata effettuata senza cambiare macchina
 			deadlockDetector = 0;
 		}
 		return twt;
+	}
+
+	private boolean hasNextOnMachine(int[] currentJobIndex2,
+			int currentMachineIndex) {
+		return (currentJobIndex2[currentMachineIndex] < allMachines.get(currentMachineIndex).size()-1);
+	}
+
+	private Job getCurrentJobOnMachine(int[] currentJobIndex2, int currentMachineIndex) {
+		return allMachines.get(currentMachineIndex).get(currentJobIndex2[currentMachineIndex]);
+	}
+	
+	private Job getNextJobOnMachine(int[] currentJobIndex2, int currentMachineIndex) {
+		return allMachines.get(currentMachineIndex).get(currentJobIndex2[currentMachineIndex]++);
 	}
 
 	public void setInitialTwt() {
@@ -477,8 +524,7 @@ public class StorageVNS {
 			else
 				throw new NoSuchMethodException();
 		} catch (NoSuchMethodException | SecurityException e) {
-			// TODO c������������ qualcosa che non va se finisce qui
-			Main.log("la riflessivit������ non ha funzionato");
+			Main.log("la riflessività non ha funzionato");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -488,8 +534,7 @@ public class StorageVNS {
 			mossaMigliorativa = (boolean) move.invoke(this, range, repeat);
 		} catch (IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			// TODO c������������ qualcosa che non va se finisce qui
-			Main.log("la riflessivit������ non ha funzionato nemmeno qui");
+			Main.log("la riflessività non ha funzionato nemmeno qui");
 			e.printStackTrace();
 			System.exit(1);
 		}

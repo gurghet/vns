@@ -23,7 +23,7 @@ public class Main {
 		String releasePath = "/Users/gurghet/Dropbox/Progetto Paolucci/Istanze Test/ReleaseData/rt300_04_050.dat";
 		String constraintsPath = "/Users/gurghet/Dropbox/Progetto Paolucci/Istanze Test/ConstraintsData/ct300_050.dat";
 		int numMacchine = 2;
-		int maxIterations = 1000;
+		int maxIterations = 5000;
 		if (args.length == 3) {
 			filePath = args[0];
 			numMacchine = Integer.parseInt(args[1]);
@@ -38,11 +38,12 @@ public class Main {
 			System.out.println("File istanza di problema non specificato");
 			System.exit(0);
 		}
-		
+
 		// inizializza la classe manager con le macchine previste
-		StorageVNS soluzione = initialSolution.CreateInitialSolution("ATCSR", 4, filePath, setupPath, releasePath, constraintsPath);/*new StorageVNS(numMacchine)*/;
+		StorageVNS soluzione = initialSolution.CreateInitialSolution("ATCSR", numMacchine, filePath, setupPath, releasePath, constraintsPath);/*new StorageVNS(numMacchine)*/;
+		logf("Soluzione iniziale:");
+		logf(soluzione);
 		//inizializzaSoluzione(soluzione, filePath);
-		soluzione.setSetupMatrix(initialSolution.getMatrixOfSetup());
 		soluzione.setInitialTwt();
 		//soluzione.printResult();
 		//soluzione.checkPriority();
