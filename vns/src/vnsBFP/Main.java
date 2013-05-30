@@ -23,7 +23,7 @@ public class Main {
 		String releasePath = "/Users/gurghet/Dropbox/Progetto Paolucci/Istanze Test/ReleaseData/rt300_04_050.dat";
 		String constraintsPath = "/Users/gurghet/Dropbox/Progetto Paolucci/Istanze Test/ConstraintsData/ct300_050.dat";
 		int numMacchine = 2;
-		int maxIterations = 5000;
+		int maxIterations = 500;
 		if (args.length == 3) {
 			filePath = args[0];
 			numMacchine = Integer.parseInt(args[1]);
