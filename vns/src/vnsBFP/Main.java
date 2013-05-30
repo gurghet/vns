@@ -23,7 +23,7 @@ public class Main {
 		String releasePath = "/Users/gurghet/Dropbox/Progetto Paolucci/Istanze Test/ReleaseData/rt300_04_050.dat";
 		String constraintsPath = "/Users/gurghet/Dropbox/Progetto Paolucci/Istanze Test/ConstraintsData/ct300_050.dat";
 		int numMacchine = 2;
-		int maxIterations = 500;
+		int maxIterations = 50000;
 		if (args.length == 3) {
 			filePath = args[0];
 			numMacchine = Integer.parseInt(args[1]);
@@ -60,7 +60,7 @@ FINE:
 			// while k<=k_{max}
 			while (k<=kmax) {
 				log(k);
-				// shaking: select a random solution x'���Nk(s)
+				// shaking: select a random solution x'���������Nk(s)
 				boolean andiamoAvanti = soluzione.muoviCasualmenteNelNeighborhood(k);
 				counter++;
 				if(counter > maxIterations || soluzione.getTwt() == 0) break FINE;
@@ -86,7 +86,7 @@ FINE:
 	}
 	
 	/**
-	 * @param element	Object elemento da stampare se la variabile VERBOSE �� true
+	 * @param element	Object elemento da stampare se la variabile VERBOSE ������ true
 	 */
 	public static void log(Object element) {
 		if (VERBOSE) {

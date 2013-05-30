@@ -4,8 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.ListIterator;
 
 public class StorageVNS {
 	// ArrayList che memorizza tutti i job divisi per macchine.
@@ -20,10 +18,17 @@ public class StorageVNS {
 	private int nMachines = 0;
 
 	// strutture per calculatetwt
-	HashMap<Job, Long> scheduledJobs;
+	boolean[] scheduledJobs;
 	int[] currentJobIndex;
+	
+	// statistiche profiling
+	long durationCalculateTwt = 0;
+	int counterCalculateTwt = 0;
+	long totalWhile = 0;
+	long totalSelf0 = 0;
+	long totalSelf2 = 0;
+	long totalPutting = 0;
 
-	@SuppressWarnings("unchecked")
 	public StorageVNS(int nMachines) {
 		allMachines = new ArrayList<ArrayList<Job>>();
 		jobMap = new HashMap<Job, Integer>();
@@ -33,7 +38,7 @@ public class StorageVNS {
 		}
 		this.nMachines = nMachines;
 		currentJobIndex = new int[nMachines];
-		scheduledJobs = new HashMap<Job, Long>();
+		scheduledJobs = new boolean[300]; // TODO: togliere l’hard coding
 	}
 
 	public ArrayList<ArrayList<Job>> getAllMachines() {
@@ -81,8 +86,8 @@ public class StorageVNS {
 	 * @param range
 	 *            raggio in cui verranno effettuati gli swap
 	 * @param repeat
-	 *            quante volte verr������ ripetuta questa mossa alla fine sto
-	 *            metodo fa un po������� le cose a casaccio, ma in fondo �����
+	 *            quante volte verr������������������ ripetuta questa mossa alla fine sto
+	 *            metodo fa un po��������������������� le cose a casaccio, ma in fondo ���������������
 	 *            un algoritmo random no?
 	 */
 	public boolean swapOnOneMachine(int range, int repeat) {
@@ -200,11 +205,10 @@ public class StorageVNS {
 			ArrayList<Job> sourceMachine, int position) {
 		Main.log("Eseguo swap across");
 		Job consideredJob = sourceMachine.get(position);
-		int index = allMachines.indexOf(sourceMachine);
 		int numberOfMachines = allMachines.size();
-		int destMachineNumber = (int) (Math.random() * numberOfMachines); // potrebbe essere sè stessa
+		int destMachineNumber = (int) (Math.random() * numberOfMachines); // potrebbe essere s�� stessa
 
-		// range = 0 ����� come dire range = nmax
+		// range = 0 ��������������� come dire range = nmax
 		if (range == 0)
 			range = this.getNumberOfJobsOnMachine(destMachineNumber);
 
@@ -316,9 +320,10 @@ public class StorageVNS {
 	// Funzioni per la realizzazione delle mosse
 
 	public int calculateTwt() {
+		//long startCalculateTwt = System.nanoTime();
 		int twt = 0;
 
-		scheduledJobs.clear();
+		scheduledJobs = new boolean[300]; // TODO: togliere l’hard coding
 		int currentMachineIndex = 0;
 		Job currentJob = null;
 		Job lastScheduledJob[] = new Job[nMachines];
@@ -337,29 +342,27 @@ public class StorageVNS {
 
 NEXTMACHINE:
 	while (notFinishedScheduling) {
+		//long startWhile = System.nanoTime();
 		currentJob = getCurrentJobOnMachine(currentJobIndex, currentMachineIndex);
-		if (currentJob.getJobID() == 245) {
-			int i = 4;
-		}
 			if (lastScheduledJob[currentMachineIndex] == null) {
 				currentTime = 0;
 			} else {
+				//long startSelf0 = System.nanoTime();
 				int currentJobSetupTime = currentJob
 						.getSetupTimes(lastScheduledJob[currentMachineIndex].getJobID());
-				long timeLastJobFinished = scheduledJobs
-						.containsKey(lastScheduledJob[currentMachineIndex]) ? scheduledJobs
-						.get(lastScheduledJob[currentMachineIndex]) : 0;
+				long timeLastJobFinished = lastScheduledJob[currentMachineIndex].getEndingTime();
 				s = timeLastJobFinished + currentJobSetupTime;
 				r = currentJob.getReleaseTime();
 				p = 0;
+				//totalSelf0 += System.nanoTime() - startSelf0;
 				// controlla che non abbia predecessori
 				if (currentJob.hasImmediatePredecessors()) {
 					ArrayList<Job> predecessors = currentJob.getImmediatelyPreviousJobs();
 					for (Job currentPredecessor : predecessors) {
-						if (scheduledJobs.containsKey(currentPredecessor)) {
+						if (scheduledJobs[currentPredecessor.getJobID()]) {
 							p = Math.max(p, currentPredecessor.getEndingTime());
 						} else {
-							Main.log("il job "+ currentJob +", nella macchina "+ jobMap.get(currentJob) +", ha un predecessore (il "+ currentPredecessor +") non schedulato nella macchina "+ jobMap.get(currentPredecessor) +", attualmente il job corrente è alla posizione "+ allMachines.get(currentMachineIndex).indexOf(currentJob) +" mentre il job non schedulato è nella posizione "+ allMachines.get(jobMap.get(currentPredecessor)).indexOf(currentPredecessor) +".");
+							//Main.log("il job "+ currentJob +", nella macchina "+ jobMap.get(currentJob) +", ha un predecessore (il "+ currentPredecessor +") non schedulato nella macchina "+ jobMap.get(currentPredecessor) +", attualmente il job corrente �� alla posizione "+ allMachines.get(currentMachineIndex).indexOf(currentJob) +" mentre il job non schedulato �� nella posizione "+ allMachines.get(jobMap.get(currentPredecessor)).indexOf(currentPredecessor) +".");
 							currentMachineIndex = jobMap.get(currentPredecessor);
 							deadlockDetector++;
 							if (deadlockDetector == allMachines.size()) {
@@ -368,23 +371,24 @@ NEXTMACHINE:
 							continue NEXTMACHINE;
 						}
 					}
+					
 				}
-
 				currentTime = Math.max(Math.max(p, s), r);
 			}
+			//long startSelf2 = System.nanoTime();
 			currentTime += currentJob.getExecutionTime();
-			// aggiorna il tempo di fine dentro il job
-			scheduledJobs.put(currentJob, currentTime);
+			scheduledJobs[currentJob.getJobID()] = true;
+			currentJob.setEndingTime(currentTime);
 			lastScheduledJob[currentMachineIndex] = currentJob;
 			twt += Math.max(
-					scheduledJobs.get(currentJob) - currentJob.getDueDate(), 0)
+					currentTime - currentJob.getDueDate(), 0)
 					* currentJob.getWeight();
 
 			if (!hasNextOnMachine(currentJobIndex, currentMachineIndex)) {
 				notFinishedScheduling = false;
 				for (int i = 0; i < allMachines.size(); i++) {
 					if (hasNextOnMachine(currentJobIndex, i)) {
-						// passa al prossimo job su un���altra macchina
+						// passa al prossimo job su un���������altra macchina
 						currentMachineIndex = i;
 						currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
 						notFinishedScheduling = true;
@@ -393,11 +397,16 @@ NEXTMACHINE:
 				}
 			} else {
 				// passa al prossimo job sulla stessa macchina
+				//long startPutting = System.nanoTime();
 				currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
+				//totalPutting += System.nanoTime() - startPutting;
 			}
-			// qui almeno una mossa �� stata effettuata senza cambiare macchina
+			// qui almeno una mossa ������ stata effettuata senza cambiare macchina
 			deadlockDetector = 0;
+			//totalWhile += System.nanoTime() - startWhile;
+			//totalSelf2 += System.nanoTime() - startSelf2;
 		}
+		//durationCalculateTwt = (durationCalculateTwt * counterCalculateTwt + System.nanoTime() - startCalculateTwt)/(++counterCalculateTwt); 
 		return twt;
 	}
 
@@ -425,9 +434,9 @@ NEXTMACHINE:
 	 */
 	public boolean muoviCasualmenteNelNeighborhood(int k) {
 
-		// parametro r ����� il range della mossa
+		// parametro r ��������������� il range della mossa
 		int range;
-		// parametro l ����� il numero di ripetizioni della mossa
+		// parametro l ��������������� il numero di ripetizioni della mossa
 		int repeat;
 		// parametro che indica il codice della mossa
 		int moveCode;
@@ -441,7 +450,7 @@ NEXTMACHINE:
 		range = ((int) (Math.floor(k / 4))) % 4; // ci sono solo 4 possibilita
 		// [2,5,10,n_max]
 		repeat = (((int) (Math.floor(k / 16))) % 3) + 1; // ci sono solo 3
-															// possibilit������
+															// possibilit������������������
 		// [1,2,3]
 
 		if (range == 0)
@@ -469,7 +478,7 @@ NEXTMACHINE:
 			else
 				throw new NoSuchMethodException();
 		} catch (NoSuchMethodException | SecurityException e) {
-			Main.log("la riflessività non ha funzionato");
+			Main.log("la riflessivit�� non ha funzionato");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -479,7 +488,7 @@ NEXTMACHINE:
 			mossaMigliorativa = (boolean) move.invoke(this, range, repeat);
 		} catch (IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			Main.log("la riflessività non ha funzionato nemmeno qui");
+			Main.log("la riflessivit�� non ha funzionato nemmeno qui");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -515,7 +524,12 @@ NEXTMACHINE:
 	}
 
 	public String toString() {
-		return allMachines.toString() + "\nCosto soluzione finale = "
-				+ this.calculateTwt();
+		return allMachines.toString()// + "\nDurata media twt = "
+				//+ durationCalculateTwt + "\nDurata totale while = "
+				//+ totalWhile + "\nDurata totale self0 = "
+				//+ totalSelf0 + "\nDurata totale self2 = "
+				//+ totalSelf2 + "\nDurata totale put   = "
+				//+ totalPutting
+				;
 	}
 }
