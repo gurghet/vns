@@ -1,5 +1,10 @@
 package vnsBFP;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import org.junit.rules.Timeout;
+
 
 /**
  * @author Andrea Passaglia
@@ -13,6 +18,8 @@ public class Main {
 	 * log(oggetto) o Main.log(oggetto).
 	 */
 	private static final boolean VERBOSE = false;
+	
+	public static boolean timeout = true;
 	
 	/**
 	 * @param args	String[] contenente: nome file istanza, numero macchine, numero mosse
@@ -50,11 +57,23 @@ public class Main {
 		
 		long twtIniziale = soluzione.calculateTwt();
 		int counter = 0;
-		
+
 		// cuore dell'algoritmo
 		// TODO mettere un timeout
-FINE:
-		while (counter < maxIterations) {
+// FINE:
+		final Timer timer = new Timer();
+
+		class RemindTask extends TimerTask {
+			public void run() {
+				logf("Time's up!");
+				timeout = false;
+				timer.cancel(); // Terminate the timer thread
+			}
+		}
+
+		timer.schedule(new RemindTask(), 5000);
+
+		while (timeout) {
 			int k = 0;
 			int kmax = 47;
 			// while k<=k_{max}
@@ -63,12 +82,12 @@ FINE:
 				// shaking: select a random solution x'���������Nk(s)
 				boolean andiamoAvanti = soluzione.muoviCasualmenteNelNeighborhood(k);
 				counter++;
-				if(counter > maxIterations || soluzione.getTwt() == 0) break FINE;
+				//if(counter > maxIterations || soluzione.getTwt() == 0) break FINE;
 				// Move or not:
 				// if solution x' is better than s
 				if (andiamoAvanti) {
 					// s=x'; k=1;
-					logf(counter + ": TWT=" + soluzione.getTwt());
+					logf("TWT=" + soluzione.getTwt());
 					k = 0;
 				} else {
 					// k=k%k_{max}+1
