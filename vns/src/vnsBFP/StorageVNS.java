@@ -106,8 +106,8 @@ public class StorageVNS {
 		Main.log("eseguo swaponone");
 		Job consideredJob = machine.get(position);
 
-		int leftLimitCurrent = calculateLeftLimit(consideredJob, machine, position, range);
-		int rightLimitCurrent = calculateRightLimit(consideredJob, machine, position,
+		int leftLimitCurrent = calculateLeftLimitFast(machine, position, range);
+		int rightLimitCurrent = calculateRightLimitFast(machine, position,
 				range);
 
 		// Calcolo la posizione con cui fare lo swap
@@ -117,14 +117,6 @@ public class StorageVNS {
 
 		// Effettuo lo swap
 		Job substitutedJob = machine.get(newPos);
-		
-		/*questo codice va a controllare le precedenze dall’altra parte*/
-		int leftLimitDest = calculateLeftLimit(substitutedJob, machine, newPos, machine.size());
-		int rightLimitDest = calculateRightLimit(substitutedJob, machine, newPos, machine.size());
-		if (position < leftLimitDest || position > rightLimitDest) {
-			Main.logf("Swap Non Effettuato");
-			return false;
-		}
 
 		machine.set(position, substitutedJob);
 		machine.set(newPos, consideredJob);
@@ -162,8 +154,8 @@ public class StorageVNS {
 			ArrayList<Job> machine, int position) {
 		Job toBeInsertedJob = machine.remove(position);
 
-		int leftLimit = calculateLeftLimit(toBeInsertedJob, machine, position, range);
-		int rightLimit = calculateRightLimit(toBeInsertedJob, machine, position, range);
+		int leftLimit = calculateLeftLimitFast(machine, position, range);
+		int rightLimit = calculateRightLimitFast(machine, position, range);
 
 		// Calcolo la posizione in cui fare il transfert
 		int distance = rightLimit - leftLimit;
@@ -218,8 +210,8 @@ public class StorageVNS {
 
 		ArrayList<Job> destMachine = allMachines.get(destMachineNumber);
 
-		int leftLimit = calculateLeftLimit(consideredJob, destMachine, position, range);
-		int rightLimit = calculateRightLimit(consideredJob, destMachine, position, range);
+		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
+		int rightLimit = calculateRightLimitFast(destMachine, position, range);
 
 		// Calcolo la osizione con cui fare lo swap all'interno del range
 		int rangeSize = rightLimit - leftLimit;
@@ -227,14 +219,6 @@ public class StorageVNS {
 		int swapPos = leftLimit + posInRange;
 
 		Job substitutedJob = destMachine.get(swapPos);
-		
-		/*questo codice va a controllare le precedenze dall’altra parte*/
-		int leftLimitDest = calculateLeftLimit(substitutedJob, sourceMachine, position, destMachine.size());
-		int rightLimitDest = calculateRightLimit(substitutedJob, sourceMachine, position, destMachine.size());
-		if (position < leftLimitDest || position > rightLimitDest) {
-			Main.logf("SwapAcross Non Effettuato");
-			return false;
-		}
 
 		// Effettuo lo scambio
 		destMachine.set(swapPos, consideredJob);
@@ -287,8 +271,8 @@ public class StorageVNS {
 
 		Job toBeTransferedJob = sourceMachine.remove(position);
 
-		int leftLimit = calculateLeftLimit(toBeTransferedJob, destMachine, position, range);
-		int rightLimit = calculateRightLimit(toBeTransferedJob, destMachine, position, range);
+		int leftLimit = calculateLeftLimitFast(destMachine, position, range);
+		int rightLimit = calculateRightLimitFast(destMachine, position, range);
 
 		// Calcolo la posizione con cui fare il transfert.
 		int distance = rightLimit - leftLimit;
@@ -326,45 +310,6 @@ public class StorageVNS {
 			return position + range - 1;
 		} else {
 			return destMachine.size() - 1;
-		}
-	}
-	
-	private int calculateLeftLimit(Job j, ArrayList<Job> destMachine,
-			int position, int range) {
-		int indexOfDestMachine = allMachines.indexOf(destMachine);
-		ArrayList<Job> predecessors = j.getAllIndirectPredecessors();
-		int maxPredecessorIndex = Integer.MIN_VALUE;
-		for (Job predecessor : predecessors) {
-			int machineIndex = jobMap.get(predecessor);
-			if (machineIndex == indexOfDestMachine) {
-				maxPredecessorIndex = Math.max(maxPredecessorIndex,
-						destMachine.indexOf(predecessor));
-			}
-		}
-		int positionOnDestMachine = Math.min(position, destMachine.size() - 1);
-		if ((positionOnDestMachine - range) > -1) {
-			return Math.max(maxPredecessorIndex, positionOnDestMachine - range);
-		} else {
-			return Math.max(maxPredecessorIndex, -1);
-		}
-	}
-
-	private int calculateRightLimit(Job j, ArrayList<Job> destMachine,
-			int position, int range) {
-		int indexOfDestMachine = allMachines.indexOf(destMachine);
-		ArrayList<Job> successors = j.getAllIndirectSuccessors();
-		int minSuccessorIndex = Integer.MAX_VALUE;
-		for (Job successor : successors) {
-			int machineIndex = jobMap.get(successor);
-			if (machineIndex == indexOfDestMachine) {
-				minSuccessorIndex = Math.min(minSuccessorIndex,
-						destMachine.indexOf(successor) + 1);
-			}
-		}
-		if ((position + range) < destMachine.size()) {
-			return Math.min(minSuccessorIndex, position + range) - 1;
-		} else {
-			return Math.min(minSuccessorIndex, destMachine.size()) - 1;
 		}
 	}
 
