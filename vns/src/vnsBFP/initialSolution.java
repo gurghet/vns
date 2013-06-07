@@ -14,7 +14,7 @@ public class initialSolution
 	
 	public static String typeOfSolution; //Mi salvo il tipo di soluzione fra ATC, ATCR e ATCRS
 	
-	public static int numberOfJob; //ci salvo il numero di Job che conterrà il file
+	public static int numberOfJob; //ci salvo il numero di Job che conterr�� il file
 	public static int numberOfMachines; //numero di macchine
 	
 	
@@ -23,7 +23,7 @@ public class initialSolution
 	public static String releasePath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\ReleaseData\\rt300_04_050.dat"
 	public static String constraintsPath = null; // "C:\\Users\\Brizzo\\Dropbox\\Progetto Paolucci\\Istanze Test\\ConstraintsData\\ct300_050.dat"
 	
-	public static ArrayList<Job> jobList = null; //Inizializzo l'arraylist che conterrà la lista di tutti i job
+	public static ArrayList<Job> jobList = null; //Inizializzo l'arraylist che conterr�� la lista di tutti i job
 	public static int tMachine[]; //vettore dove salvo il t attuale di ogni macchina per calcolare ATCRS
 	
 	//possibili valori k1 {0.2, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4, 4.8, 5.2, 5.6, 6.0, 6.4, 6.8, 7.2}
@@ -37,10 +37,10 @@ public class initialSolution
 	
 	public static float pMedio = 0; //processing time medio per il calcolo di ATCSR
 	
-	public static int indexMachine; // L'indice della macchina dove schedulerò il Job
-	public static int tMin; // t minimo della macchina sul quale schedulerò il prossimo Job
+	public static int indexMachine; // L'indice della macchina dove scheduler�� il Job
+	public static int tMin; // t minimo della macchina sul quale scheduler�� il prossimo Job
 	
-	public static int indexJob; //L'indice del Job che shedulerò per prossimo
+	public static int indexJob; //L'indice del Job che sheduler�� per prossimo
 	
 	public static StorageVNS soluzioneIniziale; //Struttura che contiene i dati
 	
@@ -72,9 +72,9 @@ public class initialSolution
 		getReleaseData(); //Recupero i dati delle Release
 		getConstraintsData(); //Recupero i vincoli di precedenza
 		
-		soluzioneIniziale = new StorageVNS(numberOfMachines); //Struttura dati che contiene lo schedule
+		soluzioneIniziale = new StorageVNS(numberOfMachines, tipo); //Struttura dati che contiene lo schedule
 
-		//Finchè non esaurisco la lista di job da schedulare
+		//Finch�� non esaurisco la lista di job da schedulare
 		while( jobList.size() > 0)
 		{ 
 			
@@ -82,7 +82,7 @@ public class initialSolution
 			//seleziono la macchina su cui schedulare e il T di quella macchina
 			selectMachine();
 			
-			//calcolo l'indice di priorità scelto per i Job ancora da schedulare e salvo la posizione in jobList e il valore
+			//calcolo l'indice di priorit�� scelto per i Job ancora da schedulare e salvo la posizione in jobList e il valore
 			if(typeOfSolution == "ATC")
 			{
 				
@@ -103,7 +103,7 @@ public class initialSolution
 			}
 			
 
-			//Scelgo il job a seconda di indice di priorità e che rispetti i vincoli di precedenza
+			//Scelgo il job a seconda di indice di priorit�� e che rispetti i vincoli di precedenza
 			selectJob();
 			
 			
@@ -123,7 +123,7 @@ public class initialSolution
 				tMachine[indexMachine] = (int)jobList.get(indexJob).getEndingTime();
 			}
 			
-			//Aggiorno su che macchina è e la posizione sulla macchina
+			//Aggiorno su che macchina �� e la posizione sulla macchina
 			jobList.get(indexJob).setMachine(indexMachine);
 			jobList.get(indexJob).setNumberOnMachine(soluzioneIniziale.getMachine(indexMachine).size());
 			
@@ -349,7 +349,7 @@ public class initialSolution
 		
 		vectorOfIndexPriority = new double[jobList.size()];
 		
-		//Prendo l'ultimo job schedulato sulla macchina (Se c'è)
+		//Prendo l'ultimo job schedulato sulla macchina (Se c'��)
 		if(soluzioneIniziale.getMachine(indexMachine).size() != 0)
 		{
 			
@@ -397,7 +397,7 @@ public class initialSolution
 		vectorOfIndexPriority = new double[jobList.size()];
 
 		
-		//Prendo l'ultimo job schedulato sulla macchina (Se c'è)
+		//Prendo l'ultimo job schedulato sulla macchina (Se c'��)
 		if(soluzioneIniziale.getMachine(indexMachine).size() != 0)
 		{
 			
@@ -467,7 +467,7 @@ public class initialSolution
 		vectorOfIndexPriority = new double[jobList.size()];
 
 		
-		//Prendo l'ultimo job schedulato sulla macchina (Se c'è)
+		//Prendo l'ultimo job schedulato sulla macchina (Se c'��)
 		if(soluzioneIniziale.getMachine(indexMachine).size() != 0)
 		{
 			
@@ -596,8 +596,8 @@ public class initialSolution
 			
 			tMin = tMinTemp;
 			
-			//Genero un numero casuale tra 0 e size di machineWhitEqualTMin che sarà l'indice del vettore
-			x = (int)( Math.random() * (machineWhitEqualTMin.size()-0.01)); // il meno 0.01 è per non far venire l'intero superiore
+			//Genero un numero casuale tra 0 e size di machineWhitEqualTMin che sar�� l'indice del vettore
+			x = (int)( Math.random() * (machineWhitEqualTMin.size()-0.01)); // il meno 0.01 �� per non far venire l'intero superiore
 			
 			indexMachine = machineWhitEqualTMin.get(x);
 			
@@ -614,14 +614,14 @@ public class initialSolution
 	{
 		
 		ArrayList<Job> precedenti; //job che devon essere schedulati prima di quello scelto
-		int x = jobList.size(); // indice che mi serve per pescare dal vettore di indici di priorità
-		Arrays.sort(vectorOfIndexPriority); // Ordino il vettore con gli indici di priorità
-		boolean jobOk = false; // Vedo se il job può essere schedulato
+		int x = jobList.size(); // indice che mi serve per pescare dal vettore di indici di priorit��
+		Arrays.sort(vectorOfIndexPriority); // Ordino il vettore con gli indici di priorit��
+		boolean jobOk = false; // Vedo se il job pu�� essere schedulato
 		int count; //variabile che conta quanti vinoli di precedenza rispettare
 		int start; // tempo di inizio
-		gap = 0; //il job che deve venire prima è in lavorazione quindi devo aspettare che finisca
+		gap = 0; //il job che deve venire prima �� in lavorazione quindi devo aspettare che finisca
 		
-		//Itero finchè il Job non va bene
+		//Itero finch�� il Job non va bene
 		while(jobOk == false)
 		{
 			
@@ -663,12 +663,12 @@ public class initialSolution
 				for(int j = 0;j<precedenti.size(); j++)
 				{
 					
-					//Se il precedente non è ancora stato schedulato scelgo un altro job
+					//Se il precedente non �� ancora stato schedulato scelgo un altro job
 					if(precedenti.get(j).getEndingTime() == 0)
 					{
 						break;
 					}
-					//se è stato schedulato invece
+					//se �� stato schedulato invece
 					else
 					{
 								
@@ -692,7 +692,7 @@ public class initialSolution
 				}
 			
 				
-				//Se tutti i job che dovevano finire prima finiscono effettivamente prima dò OK a quel job e lo schedulo
+				//Se tutti i job che dovevano finire prima finiscono effettivamente prima d�� OK a quel job e lo schedulo
 				if (count == precedenti.size())
 				{
 					
