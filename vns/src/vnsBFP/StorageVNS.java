@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class StorageVNS {
 	// ArrayList che memorizza tutti i job divisi per macchine.
@@ -24,7 +25,7 @@ public class StorageVNS {
 	private int nMachines = 0;
 
 	// strutture per calculatetwt
-	boolean[] scheduledJobs;
+	Boolean[] scheduledJobs;
 	int[] currentJobIndex;
 	
 	// statistiche profiling
@@ -44,7 +45,7 @@ public class StorageVNS {
 		}
 		this.nMachines = nMachines;
 		currentJobIndex = new int[nMachines];
-		scheduledJobs = new boolean[300]; // TODO: togliere l���hard coding
+		scheduledJobs = new boolean[300]; // TODO: togliere l'hard coding
 		
 		switch (type) {
 		case "ATC":
@@ -58,6 +59,9 @@ public class StorageVNS {
 			break;
 		default:
 			break;
+		
+		for (int i = 0; i < nMachines; i++) {
+			(new Thread(new _Runner(i), "Macchina "+i)).start();
 		}
 	}
 
@@ -346,6 +350,7 @@ public class StorageVNS {
 	}
 
 	// Funzioni per la realizzazione delle mosse
+	
 
 	public int calculateTwtSimple() 
 	{

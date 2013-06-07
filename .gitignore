@@ -7,3 +7,5 @@
 
 # Mac Os X files #
 .DS_Store
+
+org.eclipse.core.resources.prefs
