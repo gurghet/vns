@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class StorageVNS {
 	// ArrayList che memorizza tutti i job divisi per macchine.
@@ -18,7 +19,7 @@ public class StorageVNS {
 	private int nMachines = 0;
 
 	// strutture per calculatetwt
-	boolean[] scheduledJobs;
+	Boolean[] scheduledJobs;
 	int[] currentJobIndex;
 	
 	// statistiche profiling
@@ -38,7 +39,11 @@ public class StorageVNS {
 		}
 		this.nMachines = nMachines;
 		currentJobIndex = new int[nMachines];
-		scheduledJobs = new boolean[300]; // TODO: togliere l’hard coding
+		scheduledJobs = new Boolean[300]; // TODO: togliere l���hard coding
+		
+		for (int i = 0; i < nMachines; i++) {
+			(new Thread(new _Runner(i), "Macchina "+i)).start();
+		}
 	}
 
 	public ArrayList<ArrayList<Job>> getAllMachines() {
@@ -86,8 +91,8 @@ public class StorageVNS {
 	 * @param range
 	 *            raggio in cui verranno effettuati gli swap
 	 * @param repeat
-	 *            quante volte verr������������������ ripetuta questa mossa alla fine sto
-	 *            metodo fa un po��������������������� le cose a casaccio, ma in fondo ���������������
+	 *            quante volte verr������������������������������������������������������ ripetuta questa mossa alla fine sto
+	 *            metodo fa un po��������������������������������������������������������������� le cose a casaccio, ma in fondo ���������������������������������������������
 	 *            un algoritmo random no?
 	 */
 	public boolean swapOnOneMachine(int range, int repeat) {
@@ -206,9 +211,9 @@ public class StorageVNS {
 		Main.log("Eseguo swap across");
 		Job consideredJob = sourceMachine.get(position);
 		int numberOfMachines = allMachines.size();
-		int destMachineNumber = (int) (Math.random() * numberOfMachines); // potrebbe essere s�� stessa
+		int destMachineNumber = (int) (Math.random() * numberOfMachines); // potrebbe essere s������ stessa
 
-		// range = 0 ��������������� come dire range = nmax
+		// range = 0 ��������������������������������������������� come dire range = nmax
 		if (range == 0)
 			range = this.getNumberOfJobsOnMachine(destMachineNumber);
 
@@ -318,12 +323,98 @@ public class StorageVNS {
 	}
 
 	// Funzioni per la realizzazione delle mosse
+	
+	public int calculateTwtMultiThread() {
+		AtomicInteger twt = new AtomicInteger(0);
+		
+		
+		
+		return twt.get();
+	}
+	
+	private class _Runner implements Runnable {
+		private int machineIndex;
+		private boolean notFinishedScheduling;
+		private Job currentJob;
+		private Job lastScheduledJob = null;
+		private long currentTime;
+		private long s, r, p;
+		
+		public _Runner(int machineIndex) {
+			this.machineIndex = machineIndex;
+		}
+		
+		@Override
+		public void run() {
+			while (notFinishedScheduling) {
+				currentJob = getCurrentJobOnMachine(currentJobIndex, machineIndex);
+					if (lastScheduledJob == null) {
+						currentTime = 0;
+					} else {
+						int currentJobSetupTime = currentJob
+								.getSetupTimes(lastScheduledJob.getJobID());
+						long timeLastJobFinished = lastScheduledJob.getEndingTime();
+						s = timeLastJobFinished + currentJobSetupTime;
+						r = currentJob.getReleaseTime();
+						p = 0;
+						// controlla che non abbia predecessori
+						if (currentJob.hasImmediatePredecessors()) {
+							ArrayList<Job> predecessors = currentJob.getImmediatelyPreviousJobs();
+							// TODO: il deadlock detector è da fare
+							for (Job currentPredecessor : predecessors) {
+								synchronized (scheduledJobs) {
+									while (!scheduledJobs[currentPredecessor.getJobID()]) {
+										scheduledJobs.notify();
+										scheduledJobs.wait();
+									}
+									p = Math.max(p, currentPredecessor.getEndingTime());
+								}
+								continue NEXTMACHINE;
+							}
+							
+						}
+						currentTime = Math.max(Math.max(p, s), r);
+					}
+					//long startSelf2 = System.nanoTime();
+					currentTime += currentJob.getExecutionTime();
+					scheduledJobs[currentJob.getJobID()] = true;
+					currentJob.setEndingTime(currentTime);
+					lastScheduledJob[currentMachineIndex] = currentJob;
+					twt += Math.max(
+							currentTime - currentJob.getDueDate(), 0)
+							* currentJob.getWeight();
+
+					if (!hasNextOnMachine(currentJobIndex, currentMachineIndex)) {
+						notFinishedScheduling = false;
+						for (int i = 0; i < allMachines.size(); i++) {
+							if (hasNextOnMachine(currentJobIndex, i)) {
+								// passa al prossimo job su un���������������������������altra macchina
+								currentMachineIndex = i;
+								currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
+								notFinishedScheduling = true;
+								break;
+							}
+						}
+					} else {
+						// passa al prossimo job sulla stessa macchina
+						//long startPutting = System.nanoTime();
+						currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
+						//totalPutting += System.nanoTime() - startPutting;
+					}
+					// qui almeno una mossa ������������������ stata effettuata senza cambiare macchina
+					deadlockDetector = 0;
+					//totalWhile += System.nanoTime() - startWhile;
+					//totalSelf2 += System.nanoTime() - startSelf2;
+				}
+		}
+		
+	}
 
 	public int calculateTwt() {
 		//long startCalculateTwt = System.nanoTime();
 		int twt = 0;
 
-		scheduledJobs = new boolean[300]; // TODO: togliere l’hard coding
+		scheduledJobs = new Boolean[300]; // TODO: togliere l���hard coding
 		int currentMachineIndex = 0;
 		Job currentJob = null;
 		Job lastScheduledJob[] = new Job[nMachines];
@@ -362,7 +453,7 @@ NEXTMACHINE:
 						if (scheduledJobs[currentPredecessor.getJobID()]) {
 							p = Math.max(p, currentPredecessor.getEndingTime());
 						} else {
-							//Main.log("il job "+ currentJob +", nella macchina "+ jobMap.get(currentJob) +", ha un predecessore (il "+ currentPredecessor +") non schedulato nella macchina "+ jobMap.get(currentPredecessor) +", attualmente il job corrente �� alla posizione "+ allMachines.get(currentMachineIndex).indexOf(currentJob) +" mentre il job non schedulato �� nella posizione "+ allMachines.get(jobMap.get(currentPredecessor)).indexOf(currentPredecessor) +".");
+							//Main.log("il job "+ currentJob +", nella macchina "+ jobMap.get(currentJob) +", ha un predecessore (il "+ currentPredecessor +") non schedulato nella macchina "+ jobMap.get(currentPredecessor) +", attualmente il job corrente ������ alla posizione "+ allMachines.get(currentMachineIndex).indexOf(currentJob) +" mentre il job non schedulato ������ nella posizione "+ allMachines.get(jobMap.get(currentPredecessor)).indexOf(currentPredecessor) +".");
 							currentMachineIndex = jobMap.get(currentPredecessor);
 							deadlockDetector++;
 							if (deadlockDetector == allMachines.size()) {
@@ -388,7 +479,7 @@ NEXTMACHINE:
 				notFinishedScheduling = false;
 				for (int i = 0; i < allMachines.size(); i++) {
 					if (hasNextOnMachine(currentJobIndex, i)) {
-						// passa al prossimo job su un���������altra macchina
+						// passa al prossimo job su un���������������������������altra macchina
 						currentMachineIndex = i;
 						currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
 						notFinishedScheduling = true;
@@ -401,7 +492,7 @@ NEXTMACHINE:
 				currentJob = getNextJobOnMachine(currentJobIndex, currentMachineIndex);
 				//totalPutting += System.nanoTime() - startPutting;
 			}
-			// qui almeno una mossa ������ stata effettuata senza cambiare macchina
+			// qui almeno una mossa ������������������ stata effettuata senza cambiare macchina
 			deadlockDetector = 0;
 			//totalWhile += System.nanoTime() - startWhile;
 			//totalSelf2 += System.nanoTime() - startSelf2;
@@ -434,9 +525,9 @@ NEXTMACHINE:
 	 */
 	public boolean muoviCasualmenteNelNeighborhood(int k) {
 
-		// parametro r ��������������� il range della mossa
+		// parametro r ��������������������������������������������� il range della mossa
 		int range;
-		// parametro l ��������������� il numero di ripetizioni della mossa
+		// parametro l ��������������������������������������������� il numero di ripetizioni della mossa
 		int repeat;
 		// parametro che indica il codice della mossa
 		int moveCode;
@@ -450,7 +541,7 @@ NEXTMACHINE:
 		range = ((int) (Math.floor(k / 4))) % 4; // ci sono solo 4 possibilita
 		// [2,5,10,n_max]
 		repeat = (((int) (Math.floor(k / 16))) % 3) + 1; // ci sono solo 3
-															// possibilit������������������
+															// possibilit������������������������������������������������������
 		// [1,2,3]
 
 		if (range == 0)
@@ -478,7 +569,7 @@ NEXTMACHINE:
 			else
 				throw new NoSuchMethodException();
 		} catch (NoSuchMethodException | SecurityException e) {
-			Main.log("la riflessivit�� non ha funzionato");
+			Main.log("la riflessivit������ non ha funzionato");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -488,7 +579,7 @@ NEXTMACHINE:
 			mossaMigliorativa = (boolean) move.invoke(this, range, repeat);
 		} catch (IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			Main.log("la riflessivit�� non ha funzionato nemmeno qui");
+			Main.log("la riflessivit������ non ha funzionato nemmeno qui");
 			e.printStackTrace();
 			System.exit(1);
 		}
