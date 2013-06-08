@@ -128,7 +128,7 @@ public class Main {
 		// soluzione.checkPriority();
 
 		//long twtIniziale = soluzione.getTwt();
-		//int counter = 0;
+		int counter = 0;
 
 		// cuore dell'algoritmo
 		// TODO mettere un timeout
@@ -155,7 +155,7 @@ public class Main {
 				// x'���������������������������Nk(s)
 				boolean andiamoAvanti = soluzione
 						.muoviCasualmenteNelNeighborhood(k);
-				//counter++;
+				counter++;
 				// if(counter > maxIterations || soluzione.getTwt() == 0) break
 				// FINE;
 				// Move or not:
@@ -171,6 +171,7 @@ public class Main {
 			}
 		}
 		timeout = true;
+		logf("Numero mosse eseguite:  " + counter);
 		return (int) soluzione.getTwt();
 	}
 
@@ -182,6 +183,7 @@ public class Main {
 	public static void log(Object element) {
 		if (VERBOSE) {
 			System.out.println(element);
+			System.out.flush();
 		}
 	}
 

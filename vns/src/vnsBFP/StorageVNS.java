@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class StorageVNS {
@@ -35,6 +36,9 @@ public class StorageVNS {
 	long totalSelf0 = 0;
 	long totalSelf2 = 0;
 	long totalPutting = 0;
+	
+	private AtomicInteger tempTwt = new AtomicInteger(0);
+	private AtomicBoolean[] finishedScheduling;
 
 	public StorageVNS(int nMachines, String type) {
 		allMachines = new ArrayList<ArrayList<Job>>();
@@ -45,7 +49,7 @@ public class StorageVNS {
 		}
 		this.nMachines = nMachines;
 		currentJobIndex = new int[nMachines];
-		scheduledJobs = new boolean[300]; // TODO: togliere l'hard coding
+		scheduledJobs = new Boolean[300]; // TODO: togliere l'hard coding
 		
 		switch (type) {
 		case "ATC":
@@ -59,9 +63,12 @@ public class StorageVNS {
 			break;
 		default:
 			break;
+		}
 		
+		finishedScheduling = new AtomicBoolean[nMachines];
 		for (int i = 0; i < nMachines; i++) {
-			(new Thread(new _Runner(i), "Macchina "+i)).start();
+			finishedScheduling[i] = new AtomicBoolean(true);
+			(new Thread(new Runner(allMachines.get(i), tempTwt, finishedScheduling[i], "Macchina "+i), "Macchina "+i)).start();
 		}
 	}
 
@@ -351,29 +358,32 @@ public class StorageVNS {
 
 	// Funzioni per la realizzazione delle mosse
 	
+	
 
-	public int calculateTwtSimple() 
-	{
-		long resultingTwt = 0;
-		Job j = null;
-		for(int a = 0; a < allMachines.size(); a++)
-		{
-			ArrayList<Job> machine = allMachines.get(a);
-			
-			long time = 0;
-			for(int b = 0; b < machine.size(); b++)
-			{
-				// Calcolo il tempo in cui termina il job
-				j = machine.get(b);
-				time = time + j.getExecutionTime();
-				if(time > j.getDueDate())
-				{
-					long paid = (time - j.getDueDate())*j.getWeight();
-					resultingTwt += paid;
+	public int calculateTwtSimple() {	
+		tempTwt.set(0);
+		
+		boolean allFinished = false;
+
+		synchronized (tempTwt) {
+			for (int i = 0; i < finishedScheduling.length; i++)
+				finishedScheduling[i].set(false);
+			tempTwt.notifyAll();
+			try {
+				while (!allFinished) {
+					tempTwt.wait();
+					allFinished = true;
+					for (int i = 0; i < finishedScheduling.length; i++) {
+						if (finishedScheduling[i].get() == false) {
+							allFinished = false; break;
+						}
+					}
 				}
+			} catch (InterruptedException e) {
+				System.exit(1);
 			}
 		}
-		return (int) resultingTwt;
+		return tempTwt.get();
 	}
 
 	
@@ -381,7 +391,7 @@ public class StorageVNS {
 		//long startCalculateTwt = System.nanoTime();
 		int twt = 0;
 
-		scheduledJobs = new boolean[300]; // TODO: togliere l���hard coding
+		scheduledJobs = new Boolean[300]; // TODO: togliere l���hard coding
 		int currentMachineIndex = 0;
 		Job currentJob = null;
 		Job lastScheduledJob[] = new Job[nMachines];
